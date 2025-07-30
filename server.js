@@ -399,6 +399,15 @@ app.use((err, req, res, next) => {
   res.status(500).send('Internal server error');
 });
 
+// Alternative minimal health check (if you prefer simpler response)
+app.get('/ping', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    message: 'Server is alive'
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log('='.repeat(50));
