@@ -1,1427 +1,2113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Songify</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-      color: #fff;
-      min-height: 100vh;
-      padding-bottom: 100px; /* Reduced from 120px */
-    }
-
-    .header {
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(10px);
-      padding: 15px 20px; /* Reduced from 20px */
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      /* Removed position: sticky to allow scrolling */
-    }
-
-    .header h1 {
-      font-size: 1.6rem; /* Reduced from 1.8rem */
-      margin-bottom: 12px; /* Reduced from 15px */
-      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-align: center;
-    }
-
-    .playlist-header {
-      display: none;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 12px; /* Reduced from 15px */
-      padding: 12px; /* Reduced from 15px */
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .playlist-header.active {
-      display: flex;
-    }
-
-    .back-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      cursor: pointer;
-      font-size: 18px;
-      transition: all 0.3s ease;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.1);
-    }
-
-    .playlist-info {
-      flex: 1;
-    }
-
-    .playlist-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
-
-    .playlist-count {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 0.9rem;
-    }
-
-    .playlist-download-btn {
-      background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-      border: none;
-      border-radius: 25px;
-      padding: 10px 20px;
-      color: white;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .playlist-download-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
-    }
-
-    .controls-top {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 12px; /* Reduced from 15px */
-    }
-
-    .search-container {
-      position: relative;
-      flex: 1;
-      min-width: 200px;
-      max-width: 400px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    #searchInput {
-      width: 100%;
-      padding: 10px 40px 10px 12px; /* Reduced padding */
-      border: none;
-      border-radius: 25px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      font-size: 14px;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-    }
-
-    #searchInput:focus {
-      outline: none;
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 0 20px rgba(69, 183, 209, 0.3);
-    }
-
-    #searchInput::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .search-icon {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    #shuffleBtn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 20px;
-      background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-      color: white;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      white-space: nowrap;
-    }
-
-    #shuffleBtn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
-    }
-
-    #shuffleBtn.shuffle-small {
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      min-height: 36px;
-      padding: 0;
-      border: none;
-      border-radius: 50%;
-      background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-      color: white;
-      cursor: pointer;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      box-shadow: none;
-    }
-
-    #shuffleBtn.shuffle-small::before {
-      content: '🔀';
-      font-size: 18px;
-      display: block;
-    }
-
-    #shuffleBtn.shuffle-small:hover {
-      transform: translateY(-2px) scale(1.08);
-      box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
-    }
-
-    .playlist-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-    }
-
-    .playlist-btn {
-      padding: 6px 14px; /* Reduced padding */
-      border: none;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      white-space: nowrap;
-    }
-
-    .playlist-btn:hover, .playlist-btn.active {
-      background: linear-gradient(45deg, #4ecdc4, #44a08d);
-      transform: translateY(-1px);
-      box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
-    }
-
-    .content {
-      padding: 10px 20px 20px; /* Reduced top padding from 20px to 10px */
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .song-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 12px; /* Reduced from 15px */
-    }
-
-    .song-card {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 15px;
-      padding: 12px; /* Reduced from 15px */
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .song-card:hover {
-      transform: translateY(-5px);
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    .song-card.playing {
-      background: linear-gradient(45deg, rgba(69, 183, 209, 0.2), rgba(78, 205, 196, 0.2));
-      border-color: rgba(69, 183, 209, 0.5);
-    }
-
-    .song-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .song-card.playing::before {
-      opacity: 1;
-    }
-
-    .song-info {
-      display: flex;
-      align-items: center;
-      gap: 12px; /* Reduced from 15px */
-    }
-
-    .album-art {
-      width: 55px; /* Reduced from 60px */
-      height: 55px;
-      border-radius: 8px;
-      background: linear-gradient(45deg, #333, #555);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px; /* Reduced from 24px */
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .album-art img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    .song-details {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .song-title {
-      font-weight: 600;
-      font-size: 15px; /* Reduced from 16px */
-      margin-bottom: 4px; /* Reduced from 5px */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .song-artist {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 13px; /* Reduced from 14px */
-      margin-bottom: 2px; /* Reduced from 3px */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .song-album {
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 11px; /* Reduced from 12px */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .song-actions {
-      position: absolute;
-      top: 8px; /* Reduced from 10px */
-      right: 8px;
-      display: flex;
-      gap: 5px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .song-card:hover .song-actions {
-      opacity: 1;
-    }
-
-    .song-card.playing .song-actions {
-      opacity: 1;
-    }
-
-    .action-btn {
-      background: rgba(0, 0, 0, 0.8);
-      border: none;
-      border-radius: 50%;
-      width: 28px; /* Reduced from 30px */
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      cursor: pointer;
-      font-size: 11px; /* Reduced from 12px */
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-    }
-
-    .action-btn:hover {
-      background: rgba(69, 183, 209, 0.9);
-      transform: scale(1.1);
-    }
-
-    .play-indicator {
-      background: rgba(69, 183, 209, 0.9);
-      color: white;
-    }
-
-    .download-btn {
-      background: rgba(255, 107, 107, 0.9);
-    }
-
-    .download-btn:hover {
-      background: rgba(255, 107, 107, 1);
-    }
-
-    .next-btn {
-      background: rgba(78, 205, 196, 0.9);
-    }
-
-    .next-btn:hover {
-      background: rgba(78, 205, 196, 1);
-    }
-
-    .now-playing {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(20px);
-      padding: 12px 20px; /* Reduced from 15px */
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      display: none;
-      z-index: 200;
-    }
-
-    .now-playing-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .now-playing-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .now-playing-art {
-      width: 45px; /* Reduced from 50px */
-      height: 45px;
-      border-radius: 8px;
-      background: linear-gradient(45deg, #333, #555);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px; /* Reduced from 20px */
-      flex-shrink: 0;
-    }
-
-    .now-playing-art img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    .now-playing-details {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .now-playing-title {
-      font-weight: 600;
-      font-size: 13px; /* Reduced from 14px */
-      margin-bottom: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .now-playing-artist {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 11px; /* Reduced from 12px */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .progress-container {
-      flex: 1;
-      max-width: 300px;
-      margin: 0 15px;
-    }
-
-    .time-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px; /* Reduced from 11px */
-      color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 4px; /* Reduced from 5px */
-    }
-
-    .progress-slider {
-      width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.2);
-      appearance: none;
-      cursor: pointer;
-    }
-
-    .progress-slider::-webkit-slider-thumb {
-      appearance: none;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #4ecdc4;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .progress-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-      box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
-    }
-
-    .player-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px; /* Reduced from 10px */
-    }
-
-    .control-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 16px; /* Reduced from 18px */
-      cursor: pointer;
-      padding: 6px; /* Reduced from 8px */
-      border-radius: 50%;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px; /* Reduced from 40px */
-      height: 36px;
-    }
-
-    .control-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: scale(1.1);
-    }
-
-    .play-pause-btn {
-      background: linear-gradient(45deg, #4ecdc4, #44a08d);
-      font-size: 18px; /* Reduced from 20px */
-      width: 40px; /* Reduced from 45px */
-      height: 40px;
-    }
-
-    .play-pause-btn:hover {
-      background: linear-gradient(45deg, #44a08d, #4ecdc4);
-      box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px; /* Reduced from 60px */
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .empty-state-icon {
-      font-size: 48px; /* Reduced from 64px */
-      margin-bottom: 15px; /* Reduced from 20px */
-      opacity: 0.5;
-    }
-
-    /* Toast notification styles */
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 25px;
-      z-index: 1000;
-      opacity: 0;
-      transform: translateX(100%);
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    .toast.success {
-      background: rgba(78, 205, 196, 0.9);
-    }
-
-    .toast.error {
-      background: rgba(255, 107, 107, 0.9);
-    }
-
-    /* Hide playlist buttons when in playlist view */
-    .playlist-view .playlist-buttons {
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      .header {
-        padding: 12px 15px; /* Further reduced */
-      }
-
-      .header h1 {
-        font-size: 1.4rem; /* Further reduced */
-        margin-bottom: 10px;
-      }
-
-      .controls-top {
-        flex-direction: column;
-        align-items: stretch;
-        margin-bottom: 10px;
-      }
-
-      .search-container {
-        min-width: auto;
-        max-width: none;
-      }
-
-      .song-grid {
-        grid-template-columns: 1fr;
-        gap: 8px; /* Reduced */
-      }
-
-      .content {
-        padding: 8px 15px 15px; /* Further reduced */
-      }
-
-      .now-playing-content {
-        flex-wrap: wrap;
-        gap: 8px; /* Reduced */
-      }
-
-      .progress-container {
-        order: 3;
-        flex-basis: 100%;
-        max-width: none;
-        margin: 8px 0 0 0; /* Reduced */
-      }
-
-      .player-controls {
-        gap: 4px; /* Reduced */
-      }
-
-      .control-btn {
-        width: 32px; /* Reduced */
-        height: 32px;
-        font-size: 14px; /* Reduced */
-      }
-
-      .play-pause-btn {
-        width: 36px; /* Reduced */
-        height: 36px;
-        font-size: 16px; /* Reduced */
-      }
-
-      .toast {
-        right: 10px;
-        left: 10px;
-        transform: translateY(-100%);
-      }
-
-      .toast.show {
-        transform: translateY(0);
-      }
-
-      .playlist-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 10px; /* Reduced */
-      }
-
-      .playlist-download-btn {
-        align-self: stretch;
-        justify-content: center;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .song-info {
-        gap: 8px; /* Reduced */
-      }
-
-      .album-art {
-        width: 45px; /* Reduced */
-        height: 45px;
-        font-size: 18px; /* Reduced */
-      }
-
-      .song-title {
-        font-size: 14px; /* Reduced */
-      }
-
-      .song-artist {
-        font-size: 12px; /* Reduced */
-      }
-
-      .song-album {
-        font-size: 10px; /* Reduced */
-      }
-    }
-
-    .loading {
-      text-align: center;
-      padding: 30px 20px; /* Reduced */
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .loading::after {
-      content: '';
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #4ecdc4;
-      animation: spin 1s ease-in-out infinite;
-      margin-left: 10px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Songify</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        .playlist-header {
+            display: none;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .playlist-header.active {
+            display: flex;
+        }
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        .playlist-info {
+            flex: 1;
+        }
+        .playlist-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .playlist-count {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        .playlist-download-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .playlist-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+        .controls-top {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        #searchInput {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        #searchInput:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(69, 183, 209, 0.3);
+        }
+        #searchInput::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+        }
+
+        /* New/Modified CSS for search suggestions overlay */
+        .search-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7); /* Semi-transparent black shade */
+            backdrop-filter: blur(10px);
+            z-index: 10000; /* Ensure it's on top of everything */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .search-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .search-suggestions-popup {
+            background: rgba(0, 0, 0, 0.95);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 90%;
+            max-width: 600px; /* Increased max width for input + advanced */
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative; /* For advanced search panel positioning */
+        }
+
+        .search-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .search-input-in-popup-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #searchInputInPopup {
+            width: 100%;
+            padding: 10px 40px 10px 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        #searchInputInPopup:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(69, 183, 209, 0.3);
+        }
+        #searchInputInPopup::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        #searchIconInPopup {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+        }
+
+        #advancedSearchBtnInPopup {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+        #advancedSearchBtnInPopup:hover, #advancedSearchBtnInPopup.active {
+            background: rgba(69, 183, 209, 0.8);
+            transform: scale(1.1);
+        }
+
+        .search-suggestions-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .suggestion-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+        .suggestion-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-type {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .suggestion-text {
+            font-size: 13px;
+        }
+        .search-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .search-mode-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        .search-mode-btn:hover, .search-mode-btn.active {
+            background: rgba(69, 183, 209, 0.8);
+            transform: scale(1.1);
+        }
+        /* Advanced search panel now positioned relative to its parent .search-suggestions-popup */
+        .advanced-search-panel {
+            position: absolute;
+            top: 70px; /* Adjust based on header height */
+            right: 0;
+            background: rgba(0, 0, 0, 0.98); /* Slightly darker for contrast */
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            z-index: 10001; /* Higher than popup itself */
+            padding: 20px;
+            min-width: 300px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .advanced-search-panel.show {
+            display: block;
+        }
+        .advanced-search-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4ecdc4;
+        }
+        .search-field-group {
+            margin-bottom: 15px;
+        }
+        .search-field-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+            display: block;
+        }
+        .search-field-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 13px;
+        }
+        .search-field-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .search-field-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .search-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-option-group {
+            flex: 1;
+        }
+        .search-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 12px;
+        }
+        .search-select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .advanced-search-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .advanced-search-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .advanced-search-btn.primary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        .advanced-search-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .advanced-search-btn:hover {
+            transform: translateY(-1px);
+        }
+        #shuffleBtn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        #shuffleBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+        #shuffleBtn.shuffle-small {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: none;
+        }
+        #shuffleBtn.shuffle-small::before {
+            content: '🔀';
+            font-size: 18px;
+            display: block;
+        }
+        #shuffleBtn.shuffle-small:hover {
+            transform: translateY(-2px) scale(1.08);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
+        }
+        .search-info {
+            display: none;
+            padding: 10px 15px;
+            background: rgba(69, 183, 209, 0.1);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(69, 183, 209, 0.2);
+        }
+        .search-info.show {
+            display: block;
+        }
+        .search-info-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .search-info-stats {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 5px;
+        }
+        .playlist-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .playlist-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+        .playlist-btn:hover, .playlist-btn.active {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+        .content {
+            padding: 10px 20px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .song-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 12px;
+        }
+        .song-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .song-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .song-card.playing {
+            background: linear-gradient(45deg, rgba(69, 183, 209, 0.2), rgba(78, 205, 196, 0.2));
+            border-color: rgba(69, 183, 209, 0.5);
+        }
+        .song-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .song-card.playing::before {
+            opacity: 1;
+        }
+        .song-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .album-art {
+            width: 55px;
+            height: 55px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #333, #555);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .song-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .song-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .song-artist {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .song-album {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .song-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .song-card:hover .song-actions {
+            opacity: 1;
+        }
+        .song-card.playing .song-actions {
+            opacity: 1;
+        }
+        .action-btn {
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .action-btn:hover {
+            background: rgba(69, 183, 209, 0.9);
+            transform: scale(1.1);
+        }
+        .play-indicator {
+            background: rgba(69, 183, 209, 0.9);
+            color: white;
+        }
+        .download-btn {
+            background: rgba(255, 107, 107, 0.9);
+        }
+        .download-btn:hover {
+            background: rgba(255, 107, 107, 1);
+        }
+        .next-btn {
+            background: rgba(78, 205, 196, 0.9);
+        }
+        .next-btn:hover {
+            background: rgba(78, 205, 196, 1);
+        }
+        .now-playing {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            z-index: 200;
+        }
+        .now-playing-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .now-playing-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+        .now-playing-art {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #333, #555);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .now-playing-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .now-playing-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .now-playing-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .now-playing-artist {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .progress-container {
+            flex: 1;
+            max-width: 300px;
+            margin: 0 15px;
+        }
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+        .progress-slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            appearance: none;
+            cursor: pointer;
+        }
+        .progress-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .progress-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+        .play-pause-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            font-size: 18px;
+            width: 40px;
+            height: 40px;
+        }
+        .play-pause-btn:hover {
+            background: linear-gradient(45deg, #44a08d, #4ecdc4);
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast.success {
+            background: rgba(78, 205, 196, 0.9);
+        }
+        .toast.error {
+            background: rgba(255, 107, 107, 0.9);
+        }
+        .playlist-view .playlist-buttons {
+            display: none;
+        }
+        .loading-more {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+                margin-bottom: 10px;
+            }
+            .controls-top {
+                flex-direction: column;
+                align-items: stretch;
+                margin-bottom: 10px;
+            }
+            .search-container {
+                min-width: auto;
+                max-width: none;
+            }
+            /* Advanced search panel remains a dropdown, but centered on mobile */
+            .advanced-search-panel {
+                position: absolute; /* Keep absolute for positioning relative to popup */
+                top: 70px; /* Adjust based on header height */
+                left: 50%;
+                transform: translateX(-50%);
+                width: 95%;
+                max-width: 400px;
+            }
+            /* Search suggestions popup also centered on mobile */
+            .search-suggestions-popup {
+                width: 95%;
+                max-height: 90vh;
+            }
+            .song-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .content {
+                padding: 8px 15px 15px;
+            }
+            .now-playing-content {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .progress-container {
+                order: 3;
+                flex-basis: 100%;
+                max-width: none;
+                margin: 8px 0 0 0;
+            }
+            .player-controls {
+                gap: 4px;
+            }
+            .control-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            .play-pause-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            .toast {
+                right: 10px;
+                left: 10px;
+                transform: translateY(-100%);
+            }
+            .toast.show {
+                transform: translateY(0);
+            }
+            .playlist-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 10px;
+            }
+            .playlist-download-btn {
+                align-self: stretch;
+                justify-content: center;
+            }
+        }
+        @media (max-width: 480px) {
+            .song-info {
+                gap: 8px;
+            }
+            .album-art {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            .song-title {
+                font-size: 14px;
+            }
+            .song-artist {
+                font-size: 12px;
+            }
+            .song-album {
+                font-size: 10px;
+            }
+        }
+        .loading {
+            text-align: center;
+            padding: 30px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4ecdc4;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-
-<div class="header">
-  <h1>🎵 Songify</h1>
-  
-  <!-- Playlist Header (shown when viewing a specific playlist) -->
-  <div class="playlist-header" id="playlistHeader">
-    <button class="back-btn" id="backBtn" title="Back to All Playlists">←</button>
-    <div class="playlist-info">
-      <div class="playlist-name" id="currentPlaylistName">Playlist Name</div>
-      <div class="playlist-count" id="currentPlaylistCount">0 songs</div>
+    <div class="header">
+        <h1>🎵 Songify</h1>
+        <!-- Playlist Header (shown when viewing a specific playlist) -->
+        <div class="playlist-header" id="playlistHeader">
+            <button class="back-btn" id="backBtn" title="Back to All Playlists">←</button>
+            <div class="playlist-info">
+                <div class="playlist-name" id="currentPlaylistName">Playlist Name</div>
+                <div class="playlist-count" id="currentPlaylistCount">0 songs</div>
+            </div>
+            <button class="playlist-download-btn" id="playlistDownloadBtn">
+                <span>⬇️</span>
+                <span>Download Playlist</span>
+            </button>
+        </div>
+        <div class="controls-top">
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" placeholder="Search songs, artists, albums...">
+                    <span class="search-icon" id="searchIcon">🔍</span>
+                </div>
+                <div class="search-controls">
+                    <button class="search-mode-btn" id="advancedSearchBtn" title="Advanced Search">⚙️</button>
+                    <button id="shuffleBtn" class="shuffle-small" title="Shuffle"></button>
+                </div>
+            </div>
+        </div>
+        <!-- Search Info Display -->
+        <div class="search-info" id="searchInfo">
+            <div class="search-info-text" id="searchInfoText"></div>
+            <div class="search-info-stats" id="searchInfoStats"></div>
+        </div>
+        <div class="playlist-buttons" id="playlistButtons"></div>
     </div>
-    <button class="playlist-download-btn" id="playlistDownloadBtn">
-      <span>⬇️</span>
-      <span>Download Playlist</span>
-    </button>
-  </div>
-  
-  <div class="controls-top">
-    <div class="search-container" style="display: flex; align-items: center; gap: 8px;">
-      <div style="flex: 1; position: relative;">
-        <input type="text" id="searchInput" placeholder="Search songs, artists, albums...">
-        <span class="search-icon">🔍</span>
-      </div>
-      <button id="shuffleBtn" class="shuffle-small" title="Shuffle"></button>
+
+    <!-- Search Suggestions Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-suggestions-popup" id="searchSuggestionsPopup">
+            <div class="search-popup-header">
+                <button class="back-btn" id="closeSuggestionsBtn">←</button>
+                <div class="search-input-in-popup-wrapper">
+                    <input type="text" id="searchInputInPopup" placeholder="Search songs, artists, albums...">
+                    <span class="search-icon" id="searchIconInPopup">🔍</span>
+                </div>
+                <button class="search-mode-btn" id="advancedSearchBtnInPopup" title="Advanced Search">⚙️</button>
+            </div>
+            <!-- Advanced Search Panel (now inside the popup) -->
+            <div class="advanced-search-panel" id="advancedSearchPanel">
+                <div class="advanced-search-title">Advanced Search</div>
+                <div class="search-field-group">
+                    <label class="search-field-label">Track Name</label>
+                    <input type="text" class="search-field-input" id="trackSearchInput" placeholder="Enter track name...">
+                </div>
+                <div class="search-field-group">
+                    <label class="search-field-label">Artist</label>
+                    <input type="text" class="search-field-input" id="artistSearchInput" placeholder="Enter artist name...">
+                </div>
+                <div class="search-field-group">
+                    <label class="search-field-label">Album</label>
+                    <input type="text" class="search-field-input" id="albumSearchInput" placeholder="Enter album name...">
+                </div>
+                <div class="search-options">
+                    <div class="search-option-group">
+                        <label class="search-field-label">Filter By</label>
+                        <select class="search-select" id="searchFilter">
+                            <option value="all">All Fields</option>
+                            <option value="track">Track Name</option>
+                            <option value="artist">Artist</option>
+                            <option value="album">Album</option>
+                        </select>
+                    </div>
+                    <div class="search-option-group">
+                        <label class="search-field-label">Sort By</label>
+                        <select class="search-select" id="searchSort">
+                            <option value="relevance">Relevance</option>
+                            <option value="track_name">Track Name</option>
+                            <option value="artist">Artist</option>
+                            <option value="album">Album</option>
+                            <option value="duration">Duration</option>
+                        </select>
+                    </div>
+                    <div class="search-option-group">
+                        <label class="search-field-label">Order</label>
+                        <select class="search-select" id="searchOrder">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="advanced-search-actions">
+                    <button class="advanced-search-btn secondary" id="clearAdvancedSearch">Clear</button>
+                    <button class="advanced-search-btn primary" id="executeAdvancedSearch">Search</button>
+                </div>
+            </div>
+            <div class="search-suggestions-list" id="searchSuggestionsList"></div>
+        </div>
     </div>
-  </div>
-  
-  <div class="playlist-buttons" id="playlistButtons"></div>
-</div>
 
-<div class="content">
-  <div id="content" class="loading">Loading your music library...</div>
-</div>
-
-<div id="nowPlaying" class="now-playing">
-  <div class="now-playing-content">
-    <div class="now-playing-info">
-      <div class="now-playing-art" id="nowPlayingArt">🎵</div>
-      <div class="now-playing-details">
-        <div class="now-playing-title" id="nowPlayingTitle">-</div>
-        <div class="now-playing-artist" id="nowPlayingArtist">-</div>
-      </div>
+    <div class="content">
+        <div id="content" class="loading">Loading your music library...</div>
+        <div id="loadingMore" class="loading-more" style="display: none;">Loading more songs...</div>
     </div>
-    <div class="progress-container">
-      <div class="time-info">
-        <span id="currentTime">0:00</span>
-        <span id="duration">0:00</span>
-      </div>
-      <input type="range" class="progress-slider" id="progressSlider" value="0" min="0" max="100">
+
+    <div id="nowPlaying" class="now-playing">
+        <div class="now-playing-content">
+            <div class="now-playing-info">
+                <div class="now-playing-art" id="nowPlayingArt">🎵</div>
+                <div class="now-playing-details">
+                    <div class="now-playing-title" id="nowPlayingTitle">-</div>
+                    <div class="now-playing-artist" id="nowPlayingArtist">-</div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="time-info">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+                <input type="range" class="progress-slider" id="progressSlider" value="0" min="0" max="100">
+            </div>
+            <div class="player-controls">
+                <button class="control-btn" id="prevBtn">⏮</button>
+                <button class="control-btn play-pause-btn" id="playPauseBtn">⏸</button>
+                <button class="control-btn" id="nextBtn">⏭</button>
+            </div>
+        </div>
     </div>
-    <div class="player-controls">
-      <button class="control-btn" id="prevBtn">⏮</button>
-      <button class="control-btn play-pause-btn" id="playPauseBtn">⏸</button>
-      <button class="control-btn" id="nextBtn">⏭</button>
-    </div>
-  </div>
-</div>
 
-<script>
-let allSongs = [];
-let currentVisibleSongs = [];
-let currentIndex = -1;
-let audioPlayer;
-let currentPlaylist = 'all';
-let currentView = 'main'; // 'main' or 'playlist'
-let allPlaylists = {};
+    <script>
+        class EnhancedMusicPlayer {
+            constructor() {
+                this.baseUrl = 'http://localhost:3000';
+                this.allSongs = [];
+                this.currentVisibleSongs = [];
+                this.currentPage = 1;
+                this.hasMorePages = true;
+                this.currentPlaylist = 'all';
+                this.currentPlaylistTotalSongs = 0; // New property to store total songs for current playlist
+                this.currentSongIndex = -1;
+                this.isPlaying = false;
+                this.currentQuery = '';
+                this.shuffleQueue = [];
+                this.shuffleIndex = -1;
+                this.isShuffleMode = false;
+                this.isLoadingMore = false;
+                this.currentView = 'main';
+                this.allPlaylists = {};
+                this.audioPlayer = null;
+                this.searchMode = 'basic'; // 'basic', 'advanced', 'multi'
+                this.currentSearchType = 'basic';
+                this.lastSearchInfo = null;
+                this.quickSearchTimeout = null; // For debouncing quick search
+                this.initializeElements();
+                this.attachEventListeners();
+                this.setupMediaSession(); // Call setupMediaSession here
+                this.loadInitialData();
+            }
 
-// DOM elements
-const playlistButtonsDiv = document.getElementById('playlistButtons');
-const contentDiv = document.getElementById('content');
-const searchInput = document.getElementById('searchInput');
-const shuffleBtn = document.getElementById('shuffleBtn');
-const nowPlayingDiv = document.getElementById('nowPlaying');
-const nowPlayingTitle = document.getElementById('nowPlayingTitle');
-const nowPlayingArtist = document.getElementById('nowPlayingArtist');
-const nowPlayingArt = document.getElementById('nowPlayingArt');
-const currentTimeSpan = document.getElementById('currentTime');
-const durationSpan = document.getElementById('duration');
-const progressSlider = document.getElementById('progressSlider');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const playPauseBtn = document.getElementById('playPauseBtn');
+            initializeElements() {
+                // Main DOM elements
+                this.playlistButtonsDiv = document.getElementById('playlistButtons');
+                this.contentDiv = document.getElementById('content');
+                this.loadingMore = document.getElementById('loadingMore');
+                this.searchInput = document.getElementById('searchInput'); // Main header search input
 
-// Playlist view elements
-const playlistHeader = document.getElementById('playlistHeader');
-const backBtn = document.getElementById('backBtn');
-const currentPlaylistName = document.getElementById('currentPlaylistName');
-const currentPlaylistCount = document.getElementById('currentPlaylistCount');
-const playlistDownloadBtn = document.getElementById('playlistDownloadBtn');
+                // Search Overlay elements
+                this.searchOverlay = document.getElementById('searchOverlay');
+                this.searchSuggestionsPopup = document.getElementById('searchSuggestionsPopup');
+                this.searchSuggestionsList = document.getElementById('searchSuggestionsList');
+                this.closeSuggestionsBtn = document.getElementById('closeSuggestionsBtn');
+                this.searchInputInPopup = document.getElementById('searchInputInPopup'); // Input inside the popup
+                this.searchIconInPopup = document.getElementById('searchIconInPopup');
+                this.advancedSearchBtnInPopup = document.getElementById('advancedSearchBtnInPopup'); // Advanced button inside popup
 
-function showToast(message, type = 'success') {
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => toast.classList.add('show'), 100);
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => document.body.removeChild(toast), 300);
-  }, 3000);
-}
+                this.shuffleBtn = document.getElementById('shuffleBtn');
+                this.nowPlayingDiv = document.getElementById('nowPlaying');
+                this.nowPlayingTitle = document.getElementById('nowPlayingTitle');
+                this.nowPlayingArtist = document.getElementById('nowPlayingArtist');
+                this.nowPlayingArt = document.getElementById('nowPlayingArt');
+                this.currentTimeSpan = document.getElementById('currentTime');
+                this.durationSpan = document.getElementById('duration');
+                this.progressSlider = document.getElementById('progressSlider');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.playPauseBtn = document.getElementById('playPauseBtn');
 
-function formatTime(seconds) {
-  if (!isFinite(seconds)) return '0:00';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
+                // Advanced search elements (now inside the popup)
+                this.advancedSearchPanel = document.getElementById('advancedSearchPanel');
+                this.trackSearchInput = document.getElementById('trackSearchInput');
+                this.artistSearchInput = document.getElementById('artistSearchInput');
+                this.albumSearchInput = document.getElementById('albumSearchInput');
+                this.searchFilter = document.getElementById('searchFilter');
+                this.searchSort = document.getElementById('searchSort');
+                this.searchOrder = document.getElementById('searchOrder');
+                this.clearAdvancedSearch = document.getElementById('clearAdvancedSearch');
+                this.executeAdvancedSearch = document.getElementById('executeAdvancedSearch');
 
-function getDisplayName(song) {
-  if (song.metadata && song.metadata.track_name) {
-    return song.metadata.track_name;
-  }
-  if (song.track_name) {
-    return song.track_name;
-  }
-  return song.filename.replace(/\.(mp3|webm|ogg)$/i, '').replace(/-/g, ' ');
-}
+                // Search info elements
+                this.searchInfo = document.getElementById('searchInfo');
+                this.searchInfoText = document.getElementById('searchInfoText');
+                this.searchInfoStats = document.getElementById('searchInfoStats');
 
-function getArtistName(song) {
-  if (song.metadata && song.metadata.artists_string) {
-    return song.metadata.artists_string;
-  }
-  if (song.metadata && song.metadata.artists && Array.isArray(song.metadata.artists)) {
-    return song.metadata.artists.join(', ');
-  }
-  if (song.artists_string) {
-    return song.artists_string;
-  }
-  if (song.artists) {
-    return song.artists;
-  }
-  return 'Unknown Artist';
-}
+                // Playlist view elements
+                this.playlistHeader = document.getElementById('playlistHeader');
+                this.backBtn = document.getElementById('backBtn');
+                this.currentPlaylistName = document.getElementById('currentPlaylistName');
+                this.currentPlaylistCount = document.getElementById('currentPlaylistCount');
+                this.playlistDownloadBtn = document.getElementById('playlistDownloadBtn');
+            }
 
-function getAlbumName(song) {
-  if (song.metadata && song.metadata.album_name) {
-    return song.metadata.album_name;
-  }
-  if (song.album_name) {
-    return song.album_name;
-  }
-  return 'Unknown Album';
-}
+            attachEventListeners() {
+                // Main search input (triggers the overlay)
+                this.searchInput.addEventListener('input', () => this.handleMainSearchInput());
+                this.searchInput.addEventListener('focus', () => this.handleMainSearchInputFocus());
 
-function getCoverArt(song) {
-  if (song.metadata && song.metadata.cover_art_url) {
-    return song.metadata.cover_art_url;
-  }
-  if (song.cover_art_url) {
-    return song.cover_art_url;
-  }
-  return null;
-}
-
-function downloadSong(song, event) {
-  event.stopPropagation();
-  
-  // Changed from /songs/${song.playlist}/${song.filename} to /songs/${song.filename}
-  const url = `/songs/${song.filename}`;
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${getDisplayName(song)} - ${getArtistName(song)}.${song.filename.split('.').pop()}`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  showToast(`Downloading: ${getDisplayName(song)}`, 'success');
-}
-
-function downloadPlaylist(playlistName) {
-  // Get songs from the specific playlist using the new API
-  const playlistSongs = allSongs.filter(song => song.playlists && song.playlists.includes(playlistName));
-  
-  if (playlistSongs.length === 0) {
-    showToast('No songs in playlist to download', 'error');
-    return;
-  }
-  
-  showToast(`Starting download of ${playlistSongs.length} songs from ${playlistName}`, 'success');
-  
-  // Download each song in the playlist
-  playlistSongs.forEach((song, index) => {
-    setTimeout(() => {
-      // Changed from /songs/${song.playlist}/${song.filename} to /songs/${song.filename}
-      const url = `/songs/${song.filename}`;
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${getDisplayName(song)} - ${getArtistName(song)}.${song.filename.split('.').pop()}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      if (index === playlistSongs.length - 1) {
-        showToast(`Playlist download completed: ${playlistName}`, 'success');
-      }
-    }, index * 500); // Stagger downloads by 500ms
-  });
-}
-
-function playNextSong(song, event) {
-  event.stopPropagation();
-  
-  const songIndex = currentVisibleSongs.findIndex(s => 
-    s.filename === song.filename && s.playlist === song.playlist
-  );
-  
-  if (songIndex !== -1 && songIndex < currentVisibleSongs.length - 1) {
-    playSongAtIndex(songIndex + 1);
-    showToast(`Playing next: ${getDisplayName(currentVisibleSongs[songIndex + 1])}`, 'success');
-  } else {
-    showToast('No next song available', 'error');
-  }
-}
-
-function updateNowPlaying(song) {
-  nowPlayingTitle.textContent = getDisplayName(song);
-  nowPlayingArtist.textContent = getArtistName(song);
-  const coverArt = getCoverArt(song);
-  if (coverArt) {
-    nowPlayingArt.innerHTML = `<img src="${coverArt}" alt="Album Art" onerror="this.style.display='none'; this.parentElement.innerHTML='🎵';">`;
-  } else {
-    nowPlayingArt.innerHTML = '🎵';
-  }
-
-  // Update Media Session metadata for lock screen
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: getDisplayName(song),
-      artist: getArtistName(song),
-      album: getAlbumName(song),
-      artwork: [
-        { src: coverArt || 'default-artwork.png', sizes: '96x96', type: 'image/png' },
-        { src: coverArt || 'default-artwork.png', sizes: '128x128', type: 'image/png' },
-        { src: coverArt || 'default-artwork.png', sizes: '192x192', type: 'image/png' },
-        { src: coverArt || 'default-artwork.png', sizes: '256x256', type: 'image/png' },
-        { src: coverArt || 'default-artwork.png', sizes: '384x384', type: 'image/png' },
-        { src: coverArt || 'default-artwork.png', sizes: '512x512', type: 'image/png' }
-      ]
-    });
-  }
-}
-
-function updatePlayingState() {
-  document.querySelectorAll('.song-card').forEach((card, idx) => {
-    const playIndicator = card.querySelector('.play-indicator');
-    if (idx === currentIndex) {
-      card.classList.add('playing');
-      if (playIndicator) {
-        playIndicator.innerHTML = audioPlayer && !audioPlayer.paused ? '⏸' : '▶️';
-      }
-    } else {
-      card.classList.remove('playing');
-      if (playIndicator) {
-        playIndicator.innerHTML = '▶️';
-      }
-    }
-  });
-}
-
-function playSongAtIndex(index) {
-  if (index < 0 || index >= currentVisibleSongs.length) return;
-  
-  currentIndex = index;
-  const song = currentVisibleSongs[index];
-  const ext = song.filename.split('.').pop();
-  const mimeType = {
-    mp3: 'audio/mpeg', 
-    webm: 'audio/webm', 
-    ogg: 'audio/ogg'
-  }[ext] || 'audio/mpeg';
-
-  if (audioPlayer) {
-    audioPlayer.pause();
-    audioPlayer.remove();
-  }
-  
-  // Changed from /songs/${song.playlist}/${song.filename} to /songs/${song.filename}
-  audioPlayer = new Audio(`/songs/${song.filename}`);
-  audioPlayer.type = mimeType;
-  audioPlayer.autoplay = true;
-
-  updateNowPlaying(song);
-  updatePlayingState();
-  nowPlayingDiv.style.display = 'block';
-
-  audioPlayer.addEventListener('loadedmetadata', () => {
-    durationSpan.textContent = formatTime(audioPlayer.duration);
-    progressSlider.max = audioPlayer.duration;
-  });
-
-  audioPlayer.addEventListener('timeupdate', () => {
-    currentTimeSpan.textContent = formatTime(audioPlayer.currentTime);
-    progressSlider.value = audioPlayer.currentTime;
-  });
-
-  audioPlayer.addEventListener('ended', () => {
-    if (currentIndex < currentVisibleSongs.length - 1) {
-      playSongAtIndex(currentIndex + 1);
-    } else {
-      showToast('Playlist ended', 'success');
-    }
-  });
-
-  audioPlayer.addEventListener('play', updatePlayingState);
-  audioPlayer.addEventListener('pause', updatePlayingState);
-
-  progressSlider.oninput = () => {
-    audioPlayer.currentTime = progressSlider.value;
-  };
-
-  playPauseBtn.innerText = '⏸';
-
-  // Update Media Session metadata and actions
-  if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: getDisplayName(song),
-      artist: getArtistName(song),
-      album: getAlbumName(song),
-      artwork: [
-        { src: getCoverArt(song) || 'default-artwork.png', sizes: '96x96', type: 'image/png' },
-        { src: getCoverArt(song) || 'default-artwork.png', sizes: '128x128', type: 'image/png' },
-        { src: getCoverArt(song) || 'default-artwork.png', sizes: '192x192', type: 'image/png' },
-        { src: getCoverArt(song) || 'default-artwork.png', sizes: '256x256', type: 'image/png' },
-        { src: getCoverArt(song) || 'default-artwork.png', sizes: '384x384', type: 'image/png' },
-        { src: getCoverArt(song) || 'default-artwork.png', sizes: '512x512', type: 'image/png' }
-      ]
-    });
-
-    navigator.mediaSession.setActionHandler('play', () => {
-      if (audioPlayer.paused) {
-        audioPlayer.play();
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('pause', () => {
-      if (!audioPlayer.paused) {
-        audioPlayer.pause();
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
-      if (currentIndex > 0) {
-        playSongAtIndex(currentIndex - 1);
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
-      if (currentIndex < currentVisibleSongs.length - 1) {
-        playSongAtIndex(currentIndex + 1);
-      }
-    });
-  } else {
-    console.warn('Media Session API is not supported in this browser.');
-    showToast('Media Session API not supported. Lock screen controls may not work.', 'error');
-  }
-}
-
-// Player controls
-playPauseBtn.onclick = () => {
-  if (audioPlayer) {
-    if (audioPlayer.paused) {
-      audioPlayer.play();
-      playPauseBtn.innerText = '⏸';
-    } else {
-      audioPlayer.pause();
-      playPauseBtn.innerText = '▶️';
-    }
-  }
-};
-
-prevBtn.onclick = () => {
-  if (currentIndex > 0) {
-    playSongAtIndex(currentIndex - 1);
-  } else {
-    showToast('Already at first song', 'error');
-  }
-};
-
-nextBtn.onclick = () => {
-  if (currentIndex < currentVisibleSongs.length - 1) {
-    playSongAtIndex(currentIndex + 1);
-  } else {
-    showToast('Already at last song', 'error');
-  }
-};
-
-function createSongCard(song, index) {
-  const card = document.createElement('div');
-  card.className = 'song-card';
-  
-  const coverArt = getCoverArt(song);
-  const coverArtHtml = coverArt ? 
-    `<img src="${coverArt}" alt="Album Art" onerror="this.style.display='none'; this.parentElement.innerHTML='🎵';">` : 
-    '🎵';
-
-  card.innerHTML = `
-    <div class="song-info">
-      <div class="album-art">${coverArtHtml}</div>
-      <div class="song-details">
-        <div class="song-title">${getDisplayName(song)}</div>
-        <div class="song-artist">${getArtistName(song)}</div>
-        <div class="song-album">${getAlbumName(song)}</div>
-      </div>
-    </div>
-    <div class="song-actions">
-      <button class="action-btn play-indicator" title="Play/Pause">▶️</button>
-      <button class="action-btn next-btn" title="Play Next">⏭</button>
-      <button class="action-btn download-btn" title="Download">⬇️</button>
-    </div>
-  `;
-
-  // Add event listeners
-  card.onclick = () => playSongAtIndex(index);
-  
-  const nextBtn = card.querySelector('.next-btn');
-  nextBtn.onclick = (e) => playNextSong(song, e);
-  
-  const downloadBtn = card.querySelector('.download-btn');
-  downloadBtn.onclick = (e) => downloadSong(song, e);
-  
-  return card;
-}
-
-function displaySongs(songList, filter = '') {
-  const lowerFilter = filter.toLowerCase();
-  currentVisibleSongs = songList.filter(song => {
-    const title = getDisplayName(song).toLowerCase();
-    const artist = getArtistName(song).toLowerCase();
-    const album = getAlbumName(song).toLowerCase();
-    return title.includes(lowerFilter) || artist.includes(lowerFilter) || album.includes(lowerFilter);
-  });
-
-  contentDiv.innerHTML = '';
-  
-  if (currentVisibleSongs.length === 0) {
-    contentDiv.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🎵</div>
-        <h3>No songs found</h3>
-        <p>Try adjusting your search or select a different playlist</p>
-      </div>
-    `;
-    return;
-  }
-
-  const songGrid = document.createElement('div');
-  songGrid.className = 'song-grid';
-  
-  currentVisibleSongs.forEach((song, idx) => {
-    const card = createSongCard(song, idx);
-    songGrid.appendChild(card);
-  });
-
-  contentDiv.appendChild(songGrid);
-  updatePlayingState();
-}
-
-function setActivePlaylist(playlistName) {
-  currentPlaylist = playlistName;
-  document.querySelectorAll('.playlist-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  const activeBtn = document.querySelector(`[data-playlist="${playlistName}"]`);
-  if (activeBtn) {
-    activeBtn.classList.add('active');
-  }
-}
-
-function showPlaylistView(playlistName) {
-  currentView = 'playlist';
-  currentPlaylist = playlistName;
-  
-  // Update playlist header
-  currentPlaylistName.textContent = playlistName;
-  // Filter songs that belong to this playlist
-  const playlistSongs = allSongs.filter(song => song.playlists && song.playlists.includes(playlistName));
-  currentPlaylistCount.textContent = `${playlistSongs.length} song${playlistSongs.length !== 1 ? 's' : ''}`;
-  
-  // Show playlist header and hide playlist buttons
-  playlistHeader.classList.add('active');
-  document.body.classList.add('playlist-view');
-  
-  // Display songs from the playlist
-  displaySongs(playlistSongs, searchInput.value);
-  
-  // Update search placeholder
-  searchInput.placeholder = `Search in ${playlistName}...`;
-}
-
-// Updated initialization function
-async function initializeApp() {
-  try {
-    console.log('Initializing app...');
-    // Use the new /all-songs endpoint to get all unique songs
-    const response = await fetch('/all-songs');
-    const data = await response.json();
-    console.log('Songs data loaded:', data);
-    
-    allSongs = data.songs || [];
-    
-    // Get playlists info
-    const playlistsResponse = await fetch('/playlists');
-    const playlists = await playlistsResponse.json();
-    console.log('Playlists loaded:', playlists);
-    
-    allPlaylists = playlists;
-
-    console.log(`Total unique songs loaded: ${allSongs.length}`);
-    setupPlaylists(playlists);
-    displaySongs(allSongs);
-    
-  } catch (error) {
-    console.error('Error loading music library:', error);
-    contentDiv.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">❌</div>
-        <h3>Failed to load music library</h3>
-        <p>Please check your connection and try refreshing the page</p>
-      </div>
-    `;
-  }
-}
+                // Search input inside the popup
+                this.searchInputInPopup.addEventListener('input', () => this.handlePopupSearchInput());
+                this.searchInputInPopup.addEventListener('keydown', (e) => this.handlePopupSearchInputKeydown(e));
 
 
-function showMainView() {
-  currentView = 'main';
-  currentPlaylist = 'all';
-  
-  // Hide playlist header and show playlist buttons
-  playlistHeader.classList.remove('active');
-  document.body.classList.remove('playlist-view');
-  
-  // Display all songs
-  displaySongs(allSongs, searchInput.value);
-  
-  // Reset search placeholder
-  searchInput.placeholder = 'Search songs, artists, albums...';
-  
-  // Reset active playlist button
-  setActivePlaylist('all');
-}
+                // Close suggestions button
+                this.closeSuggestionsBtn.addEventListener('click', () => this.hideSuggestions());
+                // Close suggestions when clicking outside the popup content area
+                this.searchOverlay.addEventListener('click', (e) => {
+                    if (e.target === this.searchOverlay) {
+                        this.hideSuggestions();
+                    }
+                });
 
-function setupPlaylists(playlists) {
-  playlistButtonsDiv.innerHTML = '';
-  const playlistNames = Object.keys(playlists);
+                // Advanced search functionality (now within the popup)
+                this.advancedSearchBtnInPopup.addEventListener('click', () => this.toggleAdvancedSearch());
+                this.executeAdvancedSearch.addEventListener('click', () => this.performAdvancedSearch());
+                this.clearAdvancedSearch.addEventListener('click', () => this.clearAdvancedSearchFields());
 
-  const allBtn = document.createElement('button');
-  allBtn.className = 'playlist-btn active';
-  allBtn.textContent = '🎵 All Songs';
-  allBtn.dataset.playlist = 'all';
-  allBtn.onclick = () => {
-    setActivePlaylist('all');
-    displaySongs(allSongs, searchInput.value);
-  };
-  playlistButtonsDiv.appendChild(allBtn);
+                // Close advanced search when clicking outside its panel (within the popup)
+                this.searchSuggestionsPopup.addEventListener('click', (e) => {
+                    if (!this.advancedSearchPanel.contains(e.target) && !this.advancedSearchBtnInPopup.contains(e.target)) {
+                        this.hideAdvancedSearch();
+                    }
+                });
 
-  playlistNames.forEach((playlistName) => {
-    const btn = document.createElement('button');
-    btn.className = 'playlist-btn';
-    btn.textContent = playlistName;
-    btn.dataset.playlist = playlistName;
-    btn.onclick = () => {
-      showPlaylistView(playlistName);
-    };
-    playlistButtonsDiv.appendChild(btn);
-  });
-}
 
-// Event listeners for playlist view
-backBtn.onclick = () => {
-  showMainView();
-};
+                // Shuffle functionality
+                this.shuffleBtn.addEventListener('click', () => this.toggleShuffle());
 
-playlistDownloadBtn.onclick = () => {
-  if (currentView === 'playlist' && currentPlaylist !== 'all') {
-    downloadPlaylist(currentPlaylist);
-  }
-};
+                // Player controls
+                this.playPauseBtn.addEventListener('click', () => this.togglePlay());
+                this.prevBtn.addEventListener('click', () => this.playPrevious());
+                this.nextBtn.addEventListener('click', () => this.playNext());
+                this.progressSlider.addEventListener('input', () => this.seekTo());
 
-async function loadSongsWithMetadata(playlistName) {
-  try {
-    console.log(`Loading songs with metadata for playlist: ${playlistName}`);
-    const response = await fetch(`/playlist/${playlistName}/songs`);
-    if (response.ok) {
-      const data = await response.json();
-      console.log(`Songs loaded for ${playlistName}:`, data);
-      return data.songs || [];
-    } else {
-      console.log(`No songs response for playlist: ${playlistName}, status: ${response.status}`);
-    }
-  } catch (error) {
-    console.log(`Error loading songs for playlist: ${playlistName}`, error);
-  }
-  return [];
-}
+                // Playlist view controls
+                this.backBtn.addEventListener('click', () => this.showMainView());
+                this.playlistDownloadBtn.addEventListener('click', () => this.downloadPlaylist());
 
-async function initializeApp() {
-  try {
-    console.log('Initializing app...');
-    const response = await fetch('/songs');
-    const playlists = await response.json();
-    console.log('Playlists loaded:', playlists);
-    
-    allPlaylists = playlists;
-    allSongs = [];
-    
-    for (const [playlistName, songs] of Object.entries(playlists)) {
-      console.log(`Processing playlist: ${playlistName} with ${songs.length} songs`);
-      
-      // Use the new endpoint that returns songs with metadata
-      const songsWithMetadata = await loadSongsWithMetadata(playlistName);
-      
-      if (songsWithMetadata.length > 0) {
-        // Use the metadata from the server
-        songsWithMetadata.forEach(songData => {
-          const songWithPlaylist = {
-            ...songData,
-            playlist: playlistName
-          };
-          console.log(`Song data for ${songData.filename}:`, songWithPlaylist);
-          allSongs.push(songWithPlaylist);
+                // Infinite scroll
+                this.contentDiv.addEventListener('scroll', () => this.handleScroll());
+                window.addEventListener('scroll', () => this.handleScroll());
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+            }
+
+            setupMediaSession() {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.setActionHandler('play', () => {
+                        if (this.audioPlayer && this.audioPlayer.paused) {
+                            this.audioPlayer.play();
+                        }
+                    });
+                    navigator.mediaSession.setActionHandler('pause', () => {
+                        if (this.audioPlayer && !this.audioPlayer.paused) {
+                            this.audioPlayer.pause();
+                        }
+                    });
+                    navigator.mediaSession.setActionHandler('previoustrack', () => {
+                        this.playPrevious();
+                    });
+                    navigator.mediaSession.setActionHandler('nexttrack', () => {
+                        this.playNext();
+                    });
+                } else {
+                    console.warn('Media Session API is not supported in this browser.');
+                    this.showToast('Media Session API not supported. Lock screen controls may not work.', 'error');
+                }
+            }
+
+            handleMainSearchInput() {
+                const query = this.searchInput.value.trim();
+                if (query.length >= 2) {
+                    this.searchInputInPopup.value = query; // Copy query to popup input
+                    this.showSuggestions(); // Show overlay immediately on typing
+                    this.debounceQuickSearch(query); // Debounce the actual search
+                } else {
+                    this.searchSuggestionsList.innerHTML = ''; // Clear suggestions if query is too short
+                    this.hideSuggestions(); // Hide overlay if query is too short
+                }
+            }
+
+            handleMainSearchInputFocus() {
+                // When main input is focused, show the overlay and focus the popup input
+                this.searchInputInPopup.value = this.searchInput.value.trim();
+                this.showSuggestions();
+                this.searchInputInPopup.focus();
+                // If there's already a query, trigger a quick search
+                if (this.searchInputInPopup.value.length >= 2) {
+                    this.debounceQuickSearch(this.searchInputInPopup.value.trim());
+                }
+            }
+
+            handlePopupSearchInput() {
+                const query = this.searchInputInPopup.value.trim();
+                this.searchInput.value = query; // Keep main input in sync
+                if (query.length >= 2) {
+                    this.debounceQuickSearch(query);
+                } else {
+                    this.searchSuggestionsList.innerHTML = ''; // Clear suggestions if query is too short
+                }
+            }
+
+            handlePopupSearchInputKeydown(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const query = this.searchInputInPopup.value.trim();
+                    if (query) {
+                        this.performBasicSearch(query);
+                        this.hideSuggestions();
+                    }
+                }
+            }
+
+            debounceQuickSearch(query) {
+                clearTimeout(this.quickSearchTimeout);
+                this.quickSearchTimeout = setTimeout(() => {
+                    this.performQuickSearch(query);
+                }, 300); // Debounce time for quick search
+            }
+
+            async performQuickSearch(query) {
+                try {
+                    // Show a loading indicator in the suggestions list
+                    this.searchSuggestionsList.innerHTML = `
+                        <div class="loading" style="padding: 20px; text-align: center;">Loading suggestions...</div>
+                    `;
+                    const response = await fetch(`${this.baseUrl}/search/quick?q=${encodeURIComponent(query)}&limit=8`);
+                    const data = await response.json();
+
+                    this.displaySuggestions(data.suggestions || []);
+                } catch (error) {
+                    console.error('Quick search failed:', error);
+                    this.searchSuggestionsList.innerHTML = `
+                        <div class="empty-state" style="padding: 12px 15px; text-align: center; color: rgba(255,255,255,0.6);">
+                            <p>Failed to load suggestions.</p>
+                        </div>
+                    `;
+                }
+            }
+
+            displaySuggestions(suggestions) {
+                if (suggestions.length === 0) {
+                    this.searchSuggestionsList.innerHTML = `
+                        <div class="empty-state" style="padding: 12px 15px; text-align: center; color: rgba(255,255,255,0.6);">
+                            <p>No suggestions found.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                this.searchSuggestionsList.innerHTML = suggestions.map(suggestion => `
+                    <div class="suggestion-item" data-type="${suggestion.type}" data-text="${suggestion.text}" data-song-id="${suggestion.song_id || ''}">
+                        <div class="suggestion-type">${suggestion.type}</div>
+                        <div class="suggestion-text">${suggestion.text}</div>
+                    </div>
+                `).join('');
+
+                // Add click listeners to suggestions
+                this.searchSuggestionsList.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const text = item.dataset.text;
+                        const songId = item.dataset.songId;
+
+                        this.searchInput.value = text; // Update main input
+                        this.searchInputInPopup.value = text; // Update popup input
+                        this.hideSuggestions();
+
+                        if (songId) {
+                            this.playSongById(songId);
+                        } else {
+                            this.performBasicSearch(text);
+                        }
+                    });
+                });
+            }
+
+            showSuggestions() {
+                this.searchOverlay.classList.add('show');
+                this.searchInput.disabled = true; // Disable main input when overlay is active
+                this.searchInputInPopup.focus(); // Focus the input inside the popup
+            }
+
+            hideSuggestions() {
+                this.searchOverlay.classList.remove('show');
+                this.searchInput.disabled = false; // Re-enable main input
+                this.hideAdvancedSearch(); // Also hide advanced search if open
+            }
+
+            toggleAdvancedSearch() {
+                if (this.advancedSearchPanel.classList.contains('show')) {
+                    this.hideAdvancedSearch();
+                } else {
+                    this.showAdvancedSearch();
+                }
+            }
+
+            showAdvancedSearch() {
+                this.advancedSearchPanel.classList.add('show');
+                this.advancedSearchBtnInPopup.classList.add('active');
+            }
+
+            hideAdvancedSearch() {
+                this.advancedSearchPanel.classList.remove('show');
+                this.advancedSearchBtnInPopup.classList.remove('active');
+            }
+
+            clearAdvancedSearchFields() {
+                this.trackSearchInput.value = '';
+                this.artistSearchInput.value = '';
+                this.albumSearchInput.value = '';
+                this.searchFilter.value = 'all';
+                this.searchSort.value = 'relevance';
+                this.searchOrder.value = 'asc';
+            }
+
+            async performAdvancedSearch() {
+                const trackQuery = this.trackSearchInput.value.trim();
+                const artistQuery = this.artistSearchInput.value.trim();
+                const albumQuery = this.albumSearchInput.value.trim();
+                const basicQuery = this.searchInputInPopup.value.trim(); // Use popup input for basic part
+                this.hideAdvancedSearch();
+                this.hideSuggestions(); // Hide the entire overlay after search
+
+                if (trackQuery || artistQuery || albumQuery) {
+                    this.currentSearchType = 'multi';
+                    await this.performMultiFieldSearch(trackQuery, artistQuery, albumQuery);
+                } else if (basicQuery) {
+                    this.currentSearchType = 'advanced';
+                    await this.performAdvancedSingleSearch(basicQuery);
+                } else {
+                    this.showToast('Please enter search terms', 'error');
+                }
+            }
+
+            async performBasicSearch(query) {
+                try {
+                    this.showLoading(true);
+                    this.allSongs = [];
+                    this.currentPage = 1;
+                    this.hasMorePages = true;
+                    this.currentQuery = query; // Store the query for pagination
+                    this.currentSearchType = 'basic';
+                    this.hideSearchInfo();
+
+                    const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(query)}&page=1&limit=30`);
+                    const data = await response.json();
+                    this.allSongs = data.results || [];
+                    this.hasMorePages = data.pagination && data.pagination.has_next;
+                    this.lastSearchInfo = {
+                        type: 'Basic Search',
+                        query: query,
+                        total: data.total_results
+                    };
+                    this.updateVisibleSongs();
+                    this.displaySongs();
+                    this.showSearchInfo(); // Show search info after displaying songs
+                } catch (error) {
+                    this.showError('Basic search failed: ' + error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async performMultiFieldSearch(track, artist, album) {
+                try {
+                    this.showLoading(true);
+                    this.allSongs = [];
+                    this.currentPage = 1;
+                    this.hasMorePages = true;
+                    const params = new URLSearchParams();
+                    if (track) params.append('track', track);
+                    if (artist) params.append('artist', artist);
+                    if (album) params.append('album', album);
+                    params.append('page', '1');
+                    params.append('limit', '30');
+                    const response = await fetch(`${this.baseUrl}/search/multi?${params}`);
+                    const data = await response.json();
+                    this.allSongs = data.results || [];
+                    this.hasMorePages = data.pagination && data.pagination.has_next;
+                    this.lastSearchInfo = {
+                        type: 'Multi-field Search',
+                        queries: data.queries,
+                        total: data.total_results
+                    };
+                    this.updateVisibleSongs();
+                    this.displaySongs();
+                    this.showSearchInfo(); // Show search info after displaying songs
+                } catch (error) {
+                    this.showError('Multi-field search failed: ' + error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async performAdvancedSingleSearch(query) {
+                try {
+                    this.showLoading(true);
+                    this.allSongs = [];
+                    this.currentPage = 1;
+                    this.hasMorePages = true;
+                    const params = new URLSearchParams({
+                        q: query,
+                        filter: this.searchFilter.value,
+                        sort: this.searchSort.value,
+                        order: this.searchOrder.value,
+                        page: '1',
+                        limit: '30'
+                    });
+                    const response = await fetch(`${this.baseUrl}/search/advanced?${params}`);
+                    const data = await response.json();
+                    this.allSongs = data.results || [];
+                    this.hasMorePages = data.pagination && data.pagination.has_next;
+                    this.lastSearchInfo = {
+                        type: 'Advanced Search',
+                        query: data.query,
+                        filter: data.search_info.filter_applied,
+                        sort: data.search_info.sort_by,
+                        order: data.search_info.sort_order,
+                        total: data.total_results
+                    };
+                    this.updateVisibleSongs();
+                    this.displaySongs();
+                    this.showSearchInfo(); // Show search info after displaying songs
+                } catch (error) {
+                    this.showError('Advanced search failed: ' + error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            showSearchInfo() {
+                if (!this.lastSearchInfo) return;
+                let infoText = '';
+                let statsText = '';
+                switch (this.lastSearchInfo.type) {
+                    case 'Multi-field Search':
+                        const queries = [];
+                        if (this.lastSearchInfo.queries.track) queries.push(`Track: "${this.lastSearchInfo.queries.track}"`);
+                        if (this.lastSearchInfo.queries.artist) queries.push(`Artist: "${this.lastSearchInfo.queries.artist}"`);
+                        if (this.lastSearchInfo.queries.album) queries.push(`Album: "${this.lastSearchInfo.queries.album}"`);
+                        infoText = `Multi-field search: ${queries.join(', ')}`;
+                        break;
+                    case 'Advanced Search':
+                        infoText = `Advanced search: "${this.lastSearchInfo.query}" in ${this.lastSearchInfo.filter}`;
+                        statsText = `Sorted by ${this.lastSearchInfo.sort} (${this.lastSearchInfo.order})`;
+                        break;
+                    case 'Basic Search':
+                    default:
+                        infoText = `Search: "${this.lastSearchInfo.query}"`;
+                        break;
+                }
+                statsText += ` • ${this.lastSearchInfo.total} results found`;
+                this.searchInfoText.textContent = infoText;
+                this.searchInfoStats.textContent = statsText;
+                this.searchInfo.classList.add('show');
+            }
+
+            hideSearchInfo() {
+                this.searchInfo.classList.remove('show');
+                this.lastSearchInfo = null;
+            }
+
+            handleScroll() {
+                if (this.isLoadingMore || !this.hasMorePages) return;
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                const scrolledToBottom = scrollTop + windowHeight >= documentHeight - 1000;
+
+                if (scrolledToBottom) {
+                    this.loadMoreSongs();
+                }
+            }
+
+            async loadInitialData() {
+                try {
+                    await Promise.all([
+                        this.loadPlaylists(),
+                        this.loadSongs(1, true)
+                    ]);
+                } catch (error) {
+                    this.showError('Failed to load initial data: ' + error.message);
+                }
+            }
+
+            async loadPlaylists() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/playlists`);
+                    const playlists = await response.json();
+
+                    this.allPlaylists = playlists;
+                    this.setupPlaylists(playlists);
+                } catch (error) {
+                    console.error('Failed to load playlists:', error);
+                }
+            }
+
+            async loadSongs(page = 1, resetList = false) {
+                if (resetList) {
+                    this.showLoading(true);
+                    this.allSongs = [];
+                    this.currentVisibleSongs = [];
+                    this.currentPage = 1;
+                    this.hasMorePages = true;
+                    this.hideSearchInfo();
+                    this.currentPlaylistTotalSongs = 0; // Reset total songs count
+                }
+                try {
+                    let url;
+                    if (this.currentSearchType === 'multi') {
+                        const trackQuery = this.trackSearchInput.value.trim();
+                        const artistQuery = this.artistSearchInput.value.trim();
+                        const albumQuery = this.albumSearchInput.value.trim();
+
+                        const params = new URLSearchParams();
+                        if (trackQuery) params.append('track', trackQuery);
+                        if (artistQuery) params.append('artist', artistQuery);
+                        if (albumQuery) params.append('album', albumQuery);
+                        params.append('page', page.toString());
+                        params.append('limit', '30');
+
+                        url = `${this.baseUrl}/search/multi?${params}`;
+                    } else if (this.currentSearchType === 'advanced') {
+                        const params = new URLSearchParams({
+                            q: this.currentQuery,
+                            filter: this.searchFilter.value,
+                            sort: this.searchSort.value,
+                            order: this.searchOrder.value,
+                            page: page.toString(),
+                            limit: '30'
+                        });
+                        url = `${this.baseUrl}/search/advanced?${params}`;
+                    } else if (this.currentSearchType === 'basic' && this.currentQuery) {
+                        url = `${this.baseUrl}/search?q=${encodeURIComponent(this.currentQuery)}&page=${page}&limit=30`;
+                    } else if (this.currentPlaylist !== 'all') {
+                        url = `${this.baseUrl}/playlist/${encodeURIComponent(this.currentPlaylist)}/songs?page=${page}&limit=30`;
+                    } else {
+                        url = `${this.baseUrl}/all-songs?page=${page}&limit=30`;
+                    }
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    let newSongs = [];
+
+                    // Correctly determine how to extract songs based on the URL
+                    if (url.includes('/search')) {
+                        newSongs = data.results || [];
+                        // For search results, total is in data.total_results
+                        if (resetList) { // Only update total for the first page of a new search
+                            this.lastSearchInfo = {
+                                ...this.lastSearchInfo,
+                                total: data.total_results
+                            };
+                        }
+                    } else if (url.includes('/playlist/')) {
+                        newSongs = data.songs || [];
+                        if (resetList) { // Only update total for the first page of a new playlist load
+                            this.currentPlaylistTotalSongs = data.total_songs || 0;
+                        }
+                    } else if (url.includes('/all-songs')) {
+                        newSongs = data.songs || [];
+                        if (resetList) { // Only update total for the first page of all songs load
+                            this.currentPlaylistTotalSongs = data.total_songs || 0; // Assuming all-songs also returns total_songs
+                        }
+                    } else {
+                        console.warn('Unexpected URL pattern for song loading:', url);
+                        newSongs = [];
+                    }
+                    
+                    this.allSongs = [...this.allSongs, ...newSongs];
+                    this.currentPage = page;
+                    this.hasMorePages = data.pagination && data.pagination.has_next;
+                    this.updateVisibleSongs();
+                    this.displaySongs();
+                } catch (error) {
+                    this.showError('Failed to load songs: ' + error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async loadMoreSongs() {
+                if (this.isLoadingMore || !this.hasMorePages) return;
+                this.isLoadingMore = true;
+                this.loadingMore.style.display = 'block';
+                try {
+                    await this.loadSongs(this.currentPage + 1, false);
+                } finally {
+                    this.isLoadingMore = false;
+                    this.loadingMore.style.display = 'none';
+                }
+            }
+
+            updateVisibleSongs() {
+                this.currentVisibleSongs = [...this.allSongs];
+            }
+
+            displaySongs() {
+                if (this.currentVisibleSongs.length === 0) {
+                    this.contentDiv.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎵</div>
+                            <h3>No songs found</h3>
+                            <p>Try adjusting your search or select a different playlist</p>
+                        </div>
+                    `;
+                    return;
+                }
+                const songGrid = document.createElement('div');
+                songGrid.className = 'song-grid';
+                this.currentVisibleSongs.forEach((song, idx) => {
+                    const card = this.createSongCard(song, idx);
+                    songGrid.appendChild(card);
+                });
+                this.contentDiv.innerHTML = '';
+                this.contentDiv.appendChild(songGrid);
+                this.updatePlayingState();
+            }
+
+            createSongCard(song, index) {
+                const card = document.createElement('div');
+                card.className = 'song-card';
+                const coverArt = this.getCoverArt(song);
+                const coverArtHtml = coverArt ?
+                    `<img src="${coverArt}" alt="Album Art" onerror="this.style.display='none'; this.parentElement.innerHTML='🎵';">` :
+                    '🎵';
+                card.innerHTML = `
+                    <div class="song-info">
+                        <div class="album-art">${coverArtHtml}</div>
+                        <div class="song-details">
+                            <div class="song-title">${this.getDisplayName(song)}</div>
+                            <div class="song-artist">${this.getArtistName(song)}</div>
+                            <div class="song-album">${this.getAlbumName(song)}</div>
+                        </div>
+                    </div>
+                    <div class="song-actions">
+                        <button class="action-btn play-indicator" title="Play/Pause">▶️</button>
+                        <button class="action-btn next-btn" title="Play Next">⏭</button>
+                        <button class="action-btn download-btn" title="Download">⬇️</button>
+                    </div>`;
+                card.onclick = () => this.playSongAtIndex(index);
+                const nextBtn = card.querySelector('.next-btn');
+                nextBtn.onclick = (e) => this.playNextSong(song, e);
+                const downloadBtn = card.querySelector('.download-btn');
+                downloadBtn.onclick = (e) => this.downloadSong(song, e);
+                return card;
+            }
+
+            async playSongAtIndex(index) {
+                if (index < 0 || index >= this.currentVisibleSongs.length) return;
+                this.currentSongIndex = index;
+                const song = this.currentVisibleSongs[index];
+                if (this.audioPlayer) {
+                    this.audioPlayer.pause();
+                    this.audioPlayer.remove();
+                }
+                this.audioPlayer = new Audio(song.github_url);
+                this.audioPlayer.autoplay = true;
+                this.updateNowPlaying(song);
+                this.updatePlayingState();
+                this.nowPlayingDiv.style.display = 'block';
+
+                // Update Media Session metadata for lock screen
+                if ('mediaSession' in navigator) {
+                    const coverArt = this.getCoverArt(song);
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: this.getDisplayName(song),
+                        artist: this.getArtistName(song),
+                        album: this.getAlbumName(song),
+                        artwork: [
+                            { src: coverArt || '/placeholder.svg?height=96&width=96', sizes: '96x96', type: 'image/png' },
+                            { src: coverArt || '/placeholder.svg?height=128&width=128', sizes: '128x128', type: 'image/png' },
+                            { src: coverArt || '/placeholder.svg?height=192&width=192', sizes: '192x192', type: 'image/png' },
+                            { src: coverArt || '/placeholder.svg?height=256&width=256', sizes: '256x256', type: 'image/png' },
+                            { src: coverArt || '/placeholder.svg?height=384&width=384', sizes: '384x384', type: 'image/png' },
+                            { src: coverArt || '/placeholder.svg?height=512&width=512', sizes: '512x512', type: 'image/png' }
+                        ]
+                    });
+                }
+
+                this.audioPlayer.addEventListener('loadedmetadata', () => {
+                    this.durationSpan.textContent = this.formatTime(this.audioPlayer.duration);
+                    this.progressSlider.max = this.audioPlayer.duration;
+                });
+                this.audioPlayer.addEventListener('timeupdate', () => {
+                    this.currentTimeSpan.textContent = this.formatTime(this.audioPlayer.currentTime);
+                    this.progressSlider.value = this.audioPlayer.currentTime;
+                });
+                this.audioPlayer.addEventListener('ended', () => {
+                    this.playNext();
+                });
+                this.audioPlayer.addEventListener('play', () => {
+                    this.isPlaying = true;
+                    this.playPauseBtn.innerText = '⏸';
+                    this.updatePlayingState();
+                });
+                this.audioPlayer.addEventListener('pause', () => {
+                    this.isPlaying = false;
+                    this.playPauseBtn.innerText = '▶️';
+                    this.updatePlayingState();
+                });
+                this.audioPlayer.addEventListener('error', (e) => {
+                    console.error('Audio error:', e);
+                    this.showToast('Failed to load audio. Trying next song...', 'error');
+                    setTimeout(() => this.playNext(), 2000);
+                });
+
+                try {
+                    await this.audioPlayer.play();
+                    this.isPlaying = true;
+                    this.playPauseBtn.innerText = '⏸';
+                } catch (error) {
+                    console.error('Failed to play song:', error);
+                    this.showToast('Failed to play song: ' + error.message, 'error');
+                }
+            }
+
+            async playSongById(songId) {
+                try {
+                    const response = await fetch(`${this.baseUrl}/song/${songId}`);
+                    const song = await response.json();
+
+                    // Add to current visible songs if not already there
+                    const existingIndex = this.currentVisibleSongs.findIndex(s => s.song_id === songId);
+                    if (existingIndex === -1) {
+                        this.currentVisibleSongs.unshift(song);
+                        this.displaySongs();
+                        this.playSongAtIndex(0);
+                    } else {
+                        this.playSongAtIndex(existingIndex);
+                    }
+                } catch (error) {
+                    this.showError('Failed to load song: ' + error.message);
+                }
+            }
+
+            async playNext() {
+                if (this.isShuffleMode && this.shuffleQueue.length > 0) {
+                    this.playNextShuffle();
+                } else {
+                    let nextIndex = this.currentSongIndex + 1;
+
+                    if (nextIndex >= this.currentVisibleSongs.length) {
+                        if (this.hasMorePages) {
+                            await this.loadMoreSongs();
+                            if (nextIndex < this.currentVisibleSongs.length) {
+                                this.playSongAtIndex(nextIndex);
+                            }
+                        } else {
+                            nextIndex = 0;
+                            this.playSongAtIndex(nextIndex);
+                        }
+                    } else {
+                        this.playSongAtIndex(nextIndex);
+                    }
+                }
+            }
+
+            playPrevious() {
+                if (this.isShuffleMode && this.shuffleQueue.length > 0) {
+                    this.playPreviousShuffle();
+                } else {
+                    let prevIndex = this.currentSongIndex - 1;
+                    if (prevIndex < 0) {
+                        prevIndex = this.currentVisibleSongs.length - 1;
+                    }
+                    this.playSongAtIndex(prevIndex);
+                }
+            }
+
+            togglePlay() {
+                if (this.audioPlayer) {
+                    if (this.isPlaying) {
+                        this.audioPlayer.pause();
+                    } else {
+                        this.audioPlayer.play();
+                    }
+                }
+            }
+
+            seekTo() {
+                if (this.audioPlayer) {
+                    this.audioPlayer.currentTime = this.progressSlider.value;
+                }
+            }
+
+            async toggleShuffle() {
+                this.isShuffleMode = !this.isShuffleMode;
+                this.shuffleBtn.style.background = this.isShuffleMode ?
+                    'linear-gradient(45deg, #4ecdc4, #44a08d)' :
+                    'linear-gradient(45deg, #ff6b6b, #ee5a52)';
+                if (this.isShuffleMode) {
+                    await this.loadShuffleQueue();
+                    this.showToast('Shuffle mode enabled', 'success');
+                } else {
+                    this.shuffleQueue = [];
+                    this.shuffleIndex = -1;
+                    this.showToast('Shuffle mode disabled', 'success');
+                }
+            }
+
+            async loadShuffleQueue() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/random-song-ids?count=100`);
+                    const data = await response.json();
+
+                    if (data.song_ids && data.song_ids.length > 0) {
+                        const songsResponse = await fetch(`${this.baseUrl}/songs-by-ids?ids=${data.song_ids.join(',')}`);
+                        const songsData = await songsResponse.json();
+
+                        this.shuffleQueue = songsData.songs || [];
+                        this.shuffleIndex = -1;
+                        console.log(`Loaded ${this.shuffleQueue.length} songs for shuffle`);
+                    }
+                } catch (error) {
+                    console.error('Failed to load shuffle queue:', error);
+                    this.showToast('Failed to load shuffle queue', 'error');
+                }
+            }
+
+            playNextShuffle() {
+                if (this.shuffleQueue.length === 0) return;
+                this.shuffleIndex = (this.shuffleIndex + 1) % this.shuffleQueue.length;
+                const song = this.shuffleQueue[this.shuffleIndex];
+                this.playShuffleSong(song);
+            }
+
+            playPreviousShuffle() {
+                if (this.shuffleQueue.length === 0) return;
+                this.shuffleIndex = this.shuffleIndex <= 0 ? this.shuffleQueue.length - 1 : this.shuffleIndex - 1;
+                const song = this.shuffleQueue[this.shuffleIndex];
+                this.playShuffleSong(song);
+            }
+
+            async playShuffleSong(song) {
+                this.updateNowPlaying(song);
+                if (this.audioPlayer) {
+                    this.audioPlayer.pause();
+                    this.audioPlayer.remove();
+                }
+                this.audioPlayer = new Audio(song.github_url);
+                try {
+                    await this.audioPlayer.play();
+                    this.isPlaying = true;
+                    this.playPauseBtn.innerText = '⏸';
+                    this.nowPlayingDiv.style.display = 'block';
+                } catch (error) {
+                    console.error('Failed to play shuffle song:', error);
+                    this.playNextShuffle();
+                }
+            }
+
+            setupPlaylists(playlists) {
+                this.playlistButtonsDiv.innerHTML = '';
+                this.playlistButtonsDiv.innerHTML = '';
+                const allBtn = document.createElement('button');
+                allBtn.className = 'playlist-btn active';
+                allBtn.textContent = '🎵 All Songs';
+                allBtn.dataset.playlist = 'all';
+                allBtn.onclick = () => {
+                    this.setActivePlaylist('all');
+                    this.showMainView();
+                };
+                this.playlistButtonsDiv.appendChild(allBtn);
+
+                Object.keys(playlists).forEach((playlistName) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'playlist-btn';
+                    btn.textContent = playlistName;
+                    btn.dataset.playlist = playlistName;
+                    btn.onclick = () => {
+                        this.showPlaylistView(playlistName);
+                    };
+                    this.playlistButtonsDiv.appendChild(btn);
+                });
+            }
+
+            setActivePlaylist(playlistName) {
+                this.currentPlaylist = playlistName;
+                document.querySelectorAll('.playlist-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                const activeBtn = document.querySelector(`[data-playlist="${playlistName}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+
+            async showPlaylistView(playlistName) {
+                this.currentView = 'playlist';
+                this.currentPlaylist = playlistName;
+                this.currentQuery = '';
+                this.currentSearchType = 'basic';
+                this.searchInput.value = '';
+                this.hideSearchInfo();
+                this.playlistHeader.classList.add('active');
+                document.body.classList.add('playlist-view');
+                this.searchInput.placeholder = `Search in ${playlistName}...`;
+                
+                this.currentPlaylistName.textContent = playlistName; // Set playlist name
+                await this.loadSongs(1, true);
+                this.currentPlaylistCount.textContent = `${this.currentPlaylistTotalSongs} song${this.currentPlaylistTotalSongs !== 1 ? 's' : ''}`;
+            }
+
+            async showMainView() {
+                this.currentView = 'main';
+                this.currentPlaylist = 'all';
+                this.currentQuery = '';
+                this.currentSearchType = 'basic';
+                this.searchInput.value = '';
+                this.hideSearchInfo();
+                this.playlistHeader.classList.remove('active');
+                document.body.classList.remove('playlist-view');
+                this.searchInput.placeholder = 'Search songs, artists, albums...';
+                this.setActivePlaylist('all');
+                await this.loadSongs(1, true);
+            }
+
+            // Helper functions
+            getDisplayName(song) {
+                return song.track_name || song.filename?.replace(/\.(mp3|webm|ogg)$/i, '').replace(/-/g, ' ') || 'Unknown Track';
+            }
+
+            getArtistName(song) {
+                return song.artists_string || 'Unknown Artist';
+            }
+
+            getAlbumName(song) {
+                return song.album_name || 'Unknown Album';
+            }
+
+            getCoverArt(song) {
+                return song.cover_art_url || null;
+            }
+
+            formatTime(seconds) {
+                if (!isFinite(seconds)) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            updateNowPlaying(song) {
+                this.nowPlayingTitle.textContent = this.getDisplayName(song);
+                this.nowPlayingArtist.textContent = this.getArtistName(song);
+                const coverArt = this.getCoverArt(song);
+                if (coverArt) {
+                    this.nowPlayingArt.innerHTML = `<img src="${coverArt}" alt="Album Art" onerror="this.style.display='none'; this.parentElement.innerHTML='🎵';">`;
+                } else {
+                    this.nowPlayingArt.innerHTML = '🎵';
+                }
+            }
+
+            updatePlayingState() {
+                document.querySelectorAll('.song-card').forEach((card, idx) => {
+                    const playIndicator = card.querySelector('.play-indicator');
+                    if (idx === this.currentSongIndex) {
+                        card.classList.add('playing');
+                        if (playIndicator) {
+                            playIndicator.innerHTML = this.audioPlayer && !this.audioPlayer.paused ? '⏸' : '▶️';
+                        }
+                    } else {
+                        card.classList.remove('playing');
+                        if (playIndicator) {
+                            playIndicator.innerHTML = '▶️';
+                        }
+                    }
+                });
+            }
+
+            downloadSong(song, event) {
+                event.stopPropagation();
+                const url = song.github_url;
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${this.getDisplayName(song)} - ${this.getArtistName(song)}.${song.filename.split('.').pop()}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                this.showToast(`Downloading: ${this.getDisplayName(song)}`, 'success');
+            }
+
+            downloadPlaylist() {
+                if (this.currentView === 'playlist' && this.currentPlaylist !== 'all') {
+                    this.showToast(`Starting download of ${this.currentPlaylistTotalSongs} songs from ${this.currentPlaylist}`, 'success');
+
+                    this.allSongs.forEach((song, index) => {
+                        setTimeout(() => {
+                            const url = song.github_url;
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${this.getDisplayName(song)} - ${this.getArtistName(song)}.${song.filename.split('.').pop()}`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            if (index === this.allSongs.length - 1) {
+                                this.showToast(`Playlist download completed: ${this.currentPlaylist}`, 'success');
+                            }
+                        }, index * 500);
+                    });
+                }
+            }
+
+            playNextSong(song, event) {
+                event.stopPropagation();
+                const songIndex = this.currentVisibleSongs.findIndex(s =>
+                    s.filename === song.filename);
+                if (songIndex !== -1 && songIndex < this.currentVisibleSongs.length - 1) {
+                    this.playSongAtIndex(songIndex + 1);
+                    this.showToast(`Playing next: ${this.getDisplayName(this.currentVisibleSongs[songIndex + 1])}`, 'success');
+                } else {
+                    this.showToast('No next song available', 'error');
+                }
+            }
+
+            handleKeyboard(event) {
+                // If an input field is focused, let the input handle the keydown
+                if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
+                    // Allow Escape to close overlay/panel even if input is focused
+                    if (event.key === 'Escape') {
+                        if (this.advancedSearchPanel.classList.contains('show')) {
+                            this.hideAdvancedSearch();
+                            event.preventDefault(); // Prevent further propagation
+                        } else if (this.searchOverlay.classList.contains('show')) {
+                            this.hideSuggestions();
+                            event.preventDefault();
+                        }
+                    }
+                    return; // Still return for other keys to allow normal input behavior
+                }
+
+                switch (event.code) {
+                    case 'Space':
+                        event.preventDefault();
+                        this.togglePlay();
+                        break;
+                    case 'ArrowLeft':
+                        event.preventDefault();
+                        this.playPrevious();
+                        break;
+                    case 'ArrowRight':
+                        event.preventDefault();
+                        this.playNext();
+                        break;
+                    case 'Escape':
+                        if (this.currentView === 'playlist') {
+                            this.showMainView();
+                        }
+                        if (this.advancedSearchPanel.classList.contains('show')) {
+                            this.hideAdvancedSearch();
+                        }
+                        if (this.searchOverlay.classList.contains('show')) {
+                            this.hideSuggestions();
+                        }
+                        break;
+                }
+            }
+
+            showLoading(show) {
+                if (show) {
+                    this.contentDiv.innerHTML = '<div class="loading">Loading your music library...</div>';
+                }
+            }
+
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+
+            showError(message) {
+                this.showToast(message, 'error');
+            }
+        }
+
+        // Initialize the enhanced music player when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedMusicPlayer();
         });
-      } else {
-        // Fallback to the old method if the endpoint doesn't work
-        songs.forEach(filename => {
-          const songData = {
-            playlist: playlistName,
-            filename: filename,
-            track_name: filename.replace(/\.(mp3|webm|ogg)$/i, '').replace(/-/g, ' '),
-            artists_string: 'Unknown Artist',
-            cover_art_url: null
-          };
-          allSongs.push(songData);
-        });
-      }
-    }
-
-    console.log(`Total songs loaded: ${allSongs.length}`);
-    setupPlaylists(playlists);
-    displaySongs(allSongs);
-    
-  } catch (error) {
-    console.error('Error loading music library:', error);
-    contentDiv.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">❌</div>
-        <h3>Failed to load music library</h3>
-        <p>Please check your connection and try refreshing the page</p>
-      </div>
-    `;
-  }
-}
-
-// Updated search functionality for playlist view
-searchInput.addEventListener('input', () => {
-  if (currentView === 'playlist' && currentPlaylist !== 'all') {
-    // Filter songs that belong to this playlist
-    const songs = allSongs.filter(song => song.playlists && song.playlists.includes(currentPlaylist));
-    displaySongs(songs, searchInput.value);
-  } else {
-    displaySongs(allSongs, searchInput.value);
-  }
-});
-
-// Shuffle functionality
-shuffleBtn.addEventListener('click', () => {
-  if (currentVisibleSongs.length === 0) return;
-  const randomIndex = Math.floor(Math.random() * currentVisibleSongs.length);
-  playSongAtIndex(randomIndex);
-});
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT') return;
-  
-  switch(e.code) {
-    case 'Space':
-      e.preventDefault();
-      playPauseBtn.click();
-      break;
-    case 'ArrowLeft':
-      e.preventDefault();
-      prevBtn.click();
-      break;
-    case 'ArrowRight':
-      e.preventDefault();
-      nextBtn.click();
-      break;
-    case 'Escape':
-      if (currentView === 'playlist') {
-        showMainView();
-      }
-      break;
-  }
-});
-
-// Initialize the app
-initializeApp();
-</script>
-
+    </script>
 </body>
 </html>
