@@ -140,7 +140,6 @@
             color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
         }
-
         /* New/Modified CSS for search suggestions overlay */
         .search-overlay {
             position: fixed;
@@ -158,12 +157,10 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-
         .search-overlay.show {
             opacity: 1;
             visibility: visible;
         }
-
         .search-suggestions-popup {
             background: rgba(0, 0, 0, 0.95);
             border-radius: 15px;
@@ -171,12 +168,11 @@
             width: 90%;
             max-width: 600px; /* Increased max width for input + advanced */
             max-height: 80vh;
-            display: flex;
-            flex-direction: column;
+            display: flex; /* Make it a flex container */
+            flex-direction: column; /* Stack children vertically */
             overflow: hidden;
-            position: relative; /* For advanced search panel positioning */
+            position: relative;
         }
-
         .search-popup-header {
             display: flex;
             align-items: center;
@@ -184,13 +180,12 @@
             padding: 15px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
-
         .search-input-in-popup-wrapper {
             flex: 1;
             position: relative;
         }
-
         #searchInputInPopup {
             width: 100%;
             padding: 10px 40px 10px 12px;
@@ -218,7 +213,6 @@
             color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
         }
-
         #advancedSearchBtnInPopup {
             background: rgba(255, 255, 255, 0.1);
             border: none;
@@ -239,12 +233,18 @@
             transform: scale(1.1);
         }
 
-        .search-suggestions-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0;
+        /* New wrapper for content that switches between suggestions and advanced search */
+        .search-popup-content-wrapper {
+            flex: 1; /* Allow it to grow and take available space */
+            overflow-y: auto; /* Enable scrolling for content */
+            padding: 0 20px 20px; /* Add padding for content */
         }
 
+        .search-suggestions-list {
+            /* flex: 1; */ /* Removed flex:1 here, now handled by parent wrapper */
+            overflow-y: auto; /* Keep this for scrolling suggestions */
+            padding: 0; /* Remove padding here, moved to wrapper */
+        }
         .suggestion-item {
             padding: 12px 15px;
             cursor: pointer;
@@ -289,19 +289,16 @@
             background: rgba(69, 183, 209, 0.8);
             transform: scale(1.1);
         }
-        /* Advanced search panel now positioned relative to its parent .search-suggestions-popup */
+        /* Advanced search panel now positioned as a sibling within the content wrapper */
         .advanced-search-panel {
-            position: absolute;
-            top: 70px; /* Adjust based on header height */
-            right: 0;
             background: rgba(0, 0, 0, 0.98); /* Slightly darker for contrast */
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
-            z-index: 10001; /* Higher than popup itself */
+            z-index: 10001; /* Keep z-index if needed for other elements, but not for positioning within wrapper */
             padding: 20px;
-            min-width: 300px;
-            display: none;
+            width: 100%; /* Take full width of its parent */
+            display: none; /* Hidden by default */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
         .advanced-search-panel.show {
@@ -803,19 +800,18 @@
                 min-width: auto;
                 max-width: none;
             }
-            /* Advanced search panel remains a dropdown, but centered on mobile */
-            .advanced-search-panel {
-                position: absolute; /* Keep absolute for positioning relative to popup */
-                top: 70px; /* Adjust based on header height */
-                left: 50%;
-                transform: translateX(-50%);
-                width: 95%;
-                max-width: 400px;
-            }
-            /* Search suggestions popup also centered on mobile */
+            /* Search suggestions popup now takes more vertical space on mobile */
             .search-suggestions-popup {
                 width: 95%;
-                max-height: 90vh;
+                max-width: none; /* Remove max-width on mobile to allow it to stretch */
+                height: 90vh; /* Make it take more vertical space */
+                max-height: 90vh; /* Ensure it doesn't exceed viewport height */
+            }
+            .search-popup-content-wrapper {
+                padding: 0 15px 15px; /* Adjust padding for mobile */
+            }
+            .advanced-search-panel {
+                padding: 15px; /* Adjust padding for mobile */
             }
             .song-grid {
                 grid-template-columns: 1fr;
@@ -940,7 +936,6 @@
         </div>
         <div class="playlist-buttons" id="playlistButtons"></div>
     </div>
-
     <!-- Search Suggestions Overlay -->
     <div class="search-overlay" id="searchOverlay">
         <div class="search-suggestions-popup" id="searchSuggestionsPopup">
@@ -952,63 +947,64 @@
                 </div>
                 <button class="search-mode-btn" id="advancedSearchBtnInPopup" title="Advanced Search">⚙️</button>
             </div>
-            <!-- Advanced Search Panel (now inside the popup) -->
-            <div class="advanced-search-panel" id="advancedSearchPanel">
-                <div class="advanced-search-title">Advanced Search</div>
-                <div class="search-field-group">
-                    <label class="search-field-label">Track Name</label>
-                    <input type="text" class="search-field-input" id="trackSearchInput" placeholder="Enter track name...">
-                </div>
-                <div class="search-field-group">
-                    <label class="search-field-label">Artist</label>
-                    <input type="text" class="search-field-input" id="artistSearchInput" placeholder="Enter artist name...">
-                </div>
-                <div class="search-field-group">
-                    <label class="search-field-label">Album</label>
-                    <input type="text" class="search-field-input" id="albumSearchInput" placeholder="Enter album name...">
-                </div>
-                <div class="search-options">
-                    <div class="search-option-group">
-                        <label class="search-field-label">Filter By</label>
-                        <select class="search-select" id="searchFilter">
-                            <option value="all">All Fields</option>
-                            <option value="track">Track Name</option>
-                            <option value="artist">Artist</option>
-                            <option value="album">Album</option>
-                        </select>
+            <!-- New wrapper for content that switches between suggestions and advanced search -->
+            <div class="search-popup-content-wrapper">
+                <div class="search-suggestions-list" id="searchSuggestionsList"></div>
+                <!-- Advanced Search Panel (now a sibling, not absolutely positioned over) -->
+                <div class="advanced-search-panel" id="advancedSearchPanel">
+                    <div class="advanced-search-title">Advanced Search</div>
+                    <div class="search-field-group">
+                        <label class="search-field-label">Track Name</label>
+                        <input type="text" class="search-field-input" id="trackSearchInput" placeholder="Enter track name...">
                     </div>
-                    <div class="search-option-group">
-                        <label class="search-field-label">Sort By</label>
-                        <select class="search-select" id="searchSort">
-                            <option value="relevance">Relevance</option>
-                            <option value="track_name">Track Name</option>
-                            <option value="artist">Artist</option>
-                            <option value="album">Album</option>
-                            <option value="duration">Duration</option>
-                        </select>
+                    <div class="search-field-group">
+                        <label class="search-field-label">Artist</label>
+                        <input type="text" class="search-field-input" id="artistSearchInput" placeholder="Enter artist name...">
                     </div>
-                    <div class="search-option-group">
-                        <label class="search-field-label">Order</label>
-                        <select class="search-select" id="searchOrder">
-                            <option value="asc">Ascending</option>
-                            <option value="desc">Descending</option>
-                        </select>
+                    <div class="search-field-group">
+                        <label class="search-field-label">Album</label>
+                        <input type="text" class="search-field-input" id="albumSearchInput" placeholder="Enter album name...">
                     </div>
-                </div>
-                <div class="advanced-search-actions">
-                    <button class="advanced-search-btn secondary" id="clearAdvancedSearch">Clear</button>
-                    <button class="advanced-search-btn primary" id="executeAdvancedSearch">Search</button>
+                    <div class="search-options">
+                        <div class="search-option-group">
+                            <label class="search-field-label">Filter By</label>
+                            <select class="search-select" id="searchFilter">
+                                <option value="all">All Fields</option>
+                                <option value="track">Track Name</option>
+                                <option value="artist">Artist</option>
+                                <option value="album">Album</option>
+                            </select>
+                        </div>
+                        <div class="search-option-group">
+                            <label class="search-field-label">Sort By</label>
+                            <select class="search-select" id="searchSort">
+                                <option value="relevance">Relevance</option>
+                                <option value="track_name">Track Name</option>
+                                <option value="artist">Artist</option>
+                                <option value="album">Album</option>
+                                <option value="duration">Duration</option>
+                            </select>
+                        </div>
+                        <div class="search-option-group">
+                            <label class="search-field-label">Order</label>
+                            <select class="search-select" id="searchOrder">
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="advanced-search-actions">
+                        <button class="advanced-search-btn secondary" id="clearAdvancedSearch">Clear</button>
+                        <button class="advanced-search-btn primary" id="executeAdvancedSearch">Search</button>
+                    </div>
                 </div>
             </div>
-            <div class="search-suggestions-list" id="searchSuggestionsList"></div>
         </div>
     </div>
-
     <div class="content">
         <div id="content" class="loading">Loading your music library...</div>
         <div id="loadingMore" class="loading-more" style="display: none;">Loading more songs...</div>
     </div>
-
     <div id="nowPlaying" class="now-playing">
         <div class="now-playing-content">
             <div class="now-playing-info">
@@ -1032,7 +1028,6 @@
             </div>
         </div>
     </div>
-
     <script>
         class EnhancedMusicPlayer {
             constructor() {
@@ -1062,23 +1057,21 @@
                 this.setupMediaSession(); // Call setupMediaSession here
                 this.loadInitialData();
             }
-
             initializeElements() {
                 // Main DOM elements
                 this.playlistButtonsDiv = document.getElementById('playlistButtons');
                 this.contentDiv = document.getElementById('content');
                 this.loadingMore = document.getElementById('loadingMore');
                 this.searchInput = document.getElementById('searchInput'); // Main header search input
-
                 // Search Overlay elements
                 this.searchOverlay = document.getElementById('searchOverlay');
                 this.searchSuggestionsPopup = document.getElementById('searchSuggestionsPopup');
+                this.searchPopupContentWrapper = document.querySelector('.search-popup-content-wrapper'); // New element
                 this.searchSuggestionsList = document.getElementById('searchSuggestionsList');
                 this.closeSuggestionsBtn = document.getElementById('closeSuggestionsBtn');
                 this.searchInputInPopup = document.getElementById('searchInputInPopup'); // Input inside the popup
                 this.searchIconInPopup = document.getElementById('searchIconInPopup');
                 this.advancedSearchBtnInPopup = document.getElementById('advancedSearchBtnInPopup'); // Advanced button inside popup
-
                 this.shuffleBtn = document.getElementById('shuffleBtn');
                 this.nowPlayingDiv = document.getElementById('nowPlaying');
                 this.nowPlayingTitle = document.getElementById('nowPlayingTitle');
@@ -1090,7 +1083,6 @@
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
                 this.playPauseBtn = document.getElementById('playPauseBtn');
-
                 // Advanced search elements (now inside the popup)
                 this.advancedSearchPanel = document.getElementById('advancedSearchPanel');
                 this.trackSearchInput = document.getElementById('trackSearchInput');
@@ -1101,12 +1093,10 @@
                 this.searchOrder = document.getElementById('searchOrder');
                 this.clearAdvancedSearch = document.getElementById('clearAdvancedSearch');
                 this.executeAdvancedSearch = document.getElementById('executeAdvancedSearch');
-
                 // Search info elements
                 this.searchInfo = document.getElementById('searchInfo');
                 this.searchInfoText = document.getElementById('searchInfoText');
                 this.searchInfoStats = document.getElementById('searchInfoStats');
-
                 // Playlist view elements
                 this.playlistHeader = document.getElementById('playlistHeader');
                 this.backBtn = document.getElementById('backBtn');
@@ -1114,17 +1104,13 @@
                 this.currentPlaylistCount = document.getElementById('currentPlaylistCount');
                 this.playlistDownloadBtn = document.getElementById('playlistDownloadBtn');
             }
-
             attachEventListeners() {
                 // Main search input (triggers the overlay)
                 this.searchInput.addEventListener('input', () => this.handleMainSearchInput());
                 this.searchInput.addEventListener('focus', () => this.handleMainSearchInputFocus());
-
                 // Search input inside the popup
                 this.searchInputInPopup.addEventListener('input', () => this.handlePopupSearchInput());
                 this.searchInputInPopup.addEventListener('keydown', (e) => this.handlePopupSearchInputKeydown(e));
-
-
                 // Close suggestions button
                 this.closeSuggestionsBtn.addEventListener('click', () => this.hideSuggestions());
                 // Close suggestions when clicking outside the popup content area
@@ -1133,41 +1119,29 @@
                         this.hideSuggestions();
                     }
                 });
-
                 // Advanced search functionality (now within the popup)
-                this.advancedSearchBtnInPopup.addEventListener('click', () => this.toggleAdvancedSearch());
+                this.advancedSearchBtnInPopup.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent click from propagating to overlay and closing it
+                    this.toggleAdvancedSearch();
+                });
                 this.executeAdvancedSearch.addEventListener('click', () => this.performAdvancedSearch());
                 this.clearAdvancedSearch.addEventListener('click', () => this.clearAdvancedSearchFields());
-
-                // Close advanced search when clicking outside its panel (within the popup)
-                this.searchSuggestionsPopup.addEventListener('click', (e) => {
-                    if (!this.advancedSearchPanel.contains(e.target) && !this.advancedSearchBtnInPopup.contains(e.target)) {
-                        this.hideAdvancedSearch();
-                    }
-                });
-
-
                 // Shuffle functionality
                 this.shuffleBtn.addEventListener('click', () => this.toggleShuffle());
-
                 // Player controls
                 this.playPauseBtn.addEventListener('click', () => this.togglePlay());
                 this.prevBtn.addEventListener('click', () => this.playPrevious());
                 this.nextBtn.addEventListener('click', () => this.playNext());
                 this.progressSlider.addEventListener('input', () => this.seekTo());
-
                 // Playlist view controls
                 this.backBtn.addEventListener('click', () => this.showMainView());
                 this.playlistDownloadBtn.addEventListener('click', () => this.downloadPlaylist());
-
                 // Infinite scroll
                 this.contentDiv.addEventListener('scroll', () => this.handleScroll());
                 window.addEventListener('scroll', () => this.handleScroll());
-
                 // Keyboard shortcuts
                 document.addEventListener('keydown', (e) => this.handleKeyboard(e));
             }
-
             setupMediaSession() {
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.setActionHandler('play', () => {
@@ -1191,7 +1165,6 @@
                     this.showToast('Media Session API not supported. Lock screen controls may not work.', 'error');
                 }
             }
-
             handleMainSearchInput() {
                 const query = this.searchInput.value.trim();
                 if (query.length >= 2) {
@@ -1203,7 +1176,6 @@
                     this.hideSuggestions(); // Hide overlay if query is too short
                 }
             }
-
             handleMainSearchInputFocus() {
                 // When main input is focused, show the overlay and focus the popup input
                 this.searchInputInPopup.value = this.searchInput.value.trim();
@@ -1212,9 +1184,12 @@
                 // If there's already a query, trigger a quick search
                 if (this.searchInputInPopup.value.length >= 2) {
                     this.debounceQuickSearch(this.searchInputInPopup.value.trim());
+                } else {
+                    // If no query, ensure suggestions list is empty and advanced search is hidden
+                    this.searchSuggestionsList.innerHTML = '';
+                    this.hideAdvancedSearch();
                 }
             }
-
             handlePopupSearchInput() {
                 const query = this.searchInputInPopup.value.trim();
                 this.searchInput.value = query; // Keep main input in sync
@@ -1224,25 +1199,22 @@
                     this.searchSuggestionsList.innerHTML = ''; // Clear suggestions if query is too short
                 }
             }
-
             handlePopupSearchInputKeydown(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     const query = this.searchInputInPopup.value.trim();
                     if (query) {
                         this.performBasicSearch(query);
-                        this.hideSuggestions();
+                        this.hideSuggestions(); // Hide overlay after performing search
                     }
                 }
             }
-
             debounceQuickSearch(query) {
                 clearTimeout(this.quickSearchTimeout);
                 this.quickSearchTimeout = setTimeout(() => {
                     this.performQuickSearch(query);
                 }, 300); // Debounce time for quick search
             }
-
             async performQuickSearch(query) {
                 try {
                     // Show a loading indicator in the suggestions list
@@ -1251,7 +1223,6 @@
                     `;
                     const response = await fetch(`${this.baseUrl}/search/quick?q=${encodeURIComponent(query)}&limit=8`);
                     const data = await response.json();
-
                     this.displaySuggestions(data.suggestions || []);
                 } catch (error) {
                     console.error('Quick search failed:', error);
@@ -1262,7 +1233,6 @@
                     `;
                 }
             }
-
             displaySuggestions(suggestions) {
                 if (suggestions.length === 0) {
                     this.searchSuggestionsList.innerHTML = `
@@ -1278,17 +1248,14 @@
                         <div class="suggestion-text">${suggestion.text}</div>
                     </div>
                 `).join('');
-
                 // Add click listeners to suggestions
                 this.searchSuggestionsList.querySelectorAll('.suggestion-item').forEach(item => {
                     item.addEventListener('click', () => {
                         const text = item.dataset.text;
                         const songId = item.dataset.songId;
-
                         this.searchInput.value = text; // Update main input
                         this.searchInputInPopup.value = text; // Update popup input
                         this.hideSuggestions();
-
                         if (songId) {
                             this.playSongById(songId);
                         } else {
@@ -1297,19 +1264,20 @@
                     });
                 });
             }
-
             showSuggestions() {
                 this.searchOverlay.classList.add('show');
                 this.searchInput.disabled = true; // Disable main input when overlay is active
                 this.searchInputInPopup.focus(); // Focus the input inside the popup
             }
-
             hideSuggestions() {
                 this.searchOverlay.classList.remove('show');
                 this.searchInput.disabled = false; // Re-enable main input
-                this.hideAdvancedSearch(); // Also hide advanced search if open
+                this.hideAdvancedSearch(); // Also hide advanced search if open and show suggestions
+                this.searchInput.value = ''; // Clear main search input on close
+                this.searchInputInPopup.value = ''; // Clear popup search input on close
+                this.searchSuggestionsList.innerHTML = ''; // Clear suggestions
+                this.hideSearchInfo(); // Hide search info when search overlay is closed
             }
-
             toggleAdvancedSearch() {
                 if (this.advancedSearchPanel.classList.contains('show')) {
                     this.hideAdvancedSearch();
@@ -1317,17 +1285,18 @@
                     this.showAdvancedSearch();
                 }
             }
-
             showAdvancedSearch() {
                 this.advancedSearchPanel.classList.add('show');
+                this.searchSuggestionsList.style.display = 'none'; // Hide suggestions
                 this.advancedSearchBtnInPopup.classList.add('active');
+                // Scroll to top of the content wrapper to ensure advanced search fields are visible
+                this.searchPopupContentWrapper.scrollTop = 0;
             }
-
             hideAdvancedSearch() {
                 this.advancedSearchPanel.classList.remove('show');
+                this.searchSuggestionsList.style.display = 'block'; // Show suggestions again
                 this.advancedSearchBtnInPopup.classList.remove('active');
             }
-
             clearAdvancedSearchFields() {
                 this.trackSearchInput.value = '';
                 this.artistSearchInput.value = '';
@@ -1336,13 +1305,13 @@
                 this.searchSort.value = 'relevance';
                 this.searchOrder.value = 'asc';
             }
-
             async performAdvancedSearch() {
                 const trackQuery = this.trackSearchInput.value.trim();
                 const artistQuery = this.artistSearchInput.value.trim();
                 const albumQuery = this.albumSearchInput.value.trim();
                 const basicQuery = this.searchInputInPopup.value.trim(); // Use popup input for basic part
-                this.hideAdvancedSearch();
+                
+                this.hideAdvancedSearch(); // Hide advanced search panel
                 this.hideSuggestions(); // Hide the entire overlay after search
 
                 if (trackQuery || artistQuery || albumQuery) {
@@ -1355,7 +1324,6 @@
                     this.showToast('Please enter search terms', 'error');
                 }
             }
-
             async performBasicSearch(query) {
                 try {
                     this.showLoading(true);
@@ -1365,7 +1333,6 @@
                     this.currentQuery = query; // Store the query for pagination
                     this.currentSearchType = 'basic';
                     this.hideSearchInfo();
-
                     const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(query)}&page=1&limit=30`);
                     const data = await response.json();
                     this.allSongs = data.results || [];
@@ -1384,7 +1351,6 @@
                     this.showLoading(false);
                 }
             }
-
             async performMultiFieldSearch(track, artist, album) {
                 try {
                     this.showLoading(true);
@@ -1415,7 +1381,6 @@
                     this.showLoading(false);
                 }
             }
-
             async performAdvancedSingleSearch(query) {
                 try {
                     this.showLoading(true);
@@ -1451,7 +1416,6 @@
                     this.showLoading(false);
                 }
             }
-
             showSearchInfo() {
                 if (!this.lastSearchInfo) return;
                 let infoText = '';
@@ -1478,24 +1442,20 @@
                 this.searchInfoStats.textContent = statsText;
                 this.searchInfo.classList.add('show');
             }
-
             hideSearchInfo() {
                 this.searchInfo.classList.remove('show');
                 this.lastSearchInfo = null;
             }
-
             handleScroll() {
                 if (this.isLoadingMore || !this.hasMorePages) return;
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 const windowHeight = window.innerHeight;
                 const documentHeight = document.documentElement.scrollHeight;
                 const scrolledToBottom = scrollTop + windowHeight >= documentHeight - 1000;
-
                 if (scrolledToBottom) {
                     this.loadMoreSongs();
                 }
             }
-
             async loadInitialData() {
                 try {
                     await Promise.all([
@@ -1506,19 +1466,16 @@
                     this.showError('Failed to load initial data: ' + error.message);
                 }
             }
-
             async loadPlaylists() {
                 try {
                     const response = await fetch(`${this.baseUrl}/playlists`);
                     const playlists = await response.json();
-
                     this.allPlaylists = playlists;
                     this.setupPlaylists(playlists);
                 } catch (error) {
                     console.error('Failed to load playlists:', error);
                 }
             }
-
             async loadSongs(page = 1, resetList = false) {
                 if (resetList) {
                     this.showLoading(true);
@@ -1535,14 +1492,12 @@
                         const trackQuery = this.trackSearchInput.value.trim();
                         const artistQuery = this.artistSearchInput.value.trim();
                         const albumQuery = this.albumSearchInput.value.trim();
-
                         const params = new URLSearchParams();
                         if (trackQuery) params.append('track', trackQuery);
                         if (artistQuery) params.append('artist', artistQuery);
                         if (albumQuery) params.append('album', albumQuery);
                         params.append('page', page.toString());
                         params.append('limit', '30');
-
                         url = `${this.baseUrl}/search/multi?${params}`;
                     } else if (this.currentSearchType === 'advanced') {
                         const params = new URLSearchParams({
@@ -1561,11 +1516,9 @@
                     } else {
                         url = `${this.baseUrl}/all-songs?page=${page}&limit=30`;
                     }
-
                     const response = await fetch(url);
                     const data = await response.json();
                     let newSongs = [];
-
                     // Correctly determine how to extract songs based on the URL
                     if (url.includes('/search')) {
                         newSongs = data.results || [];
@@ -1590,8 +1543,7 @@
                         console.warn('Unexpected URL pattern for song loading:', url);
                         newSongs = [];
                     }
-                    
-                    this.allSongs = [...this.allSongs, ...newSongs];
+                                        this.allSongs = [...this.allSongs, ...newSongs];
                     this.currentPage = page;
                     this.hasMorePages = data.pagination && data.pagination.has_next;
                     this.updateVisibleSongs();
@@ -1602,7 +1554,6 @@
                     this.showLoading(false);
                 }
             }
-
             async loadMoreSongs() {
                 if (this.isLoadingMore || !this.hasMorePages) return;
                 this.isLoadingMore = true;
@@ -1614,11 +1565,9 @@
                     this.loadingMore.style.display = 'none';
                 }
             }
-
             updateVisibleSongs() {
                 this.currentVisibleSongs = [...this.allSongs];
             }
-
             displaySongs() {
                 if (this.currentVisibleSongs.length === 0) {
                     this.contentDiv.innerHTML = `
@@ -1640,7 +1589,6 @@
                 this.contentDiv.appendChild(songGrid);
                 this.updatePlayingState();
             }
-
             createSongCard(song, index) {
                 const card = document.createElement('div');
                 card.className = 'song-card';
@@ -1669,7 +1617,6 @@
                 downloadBtn.onclick = (e) => this.downloadSong(song, e);
                 return card;
             }
-
             async playSongAtIndex(index) {
                 if (index < 0 || index >= this.currentVisibleSongs.length) return;
                 this.currentSongIndex = index;
@@ -1683,7 +1630,6 @@
                 this.updateNowPlaying(song);
                 this.updatePlayingState();
                 this.nowPlayingDiv.style.display = 'block';
-
                 // Update Media Session metadata for lock screen
                 if ('mediaSession' in navigator) {
                     const coverArt = this.getCoverArt(song);
@@ -1701,7 +1647,6 @@
                         ]
                     });
                 }
-
                 this.audioPlayer.addEventListener('loadedmetadata', () => {
                     this.durationSpan.textContent = this.formatTime(this.audioPlayer.duration);
                     this.progressSlider.max = this.audioPlayer.duration;
@@ -1728,7 +1673,6 @@
                     this.showToast('Failed to load audio. Trying next song...', 'error');
                     setTimeout(() => this.playNext(), 2000);
                 });
-
                 try {
                     await this.audioPlayer.play();
                     this.isPlaying = true;
@@ -1738,12 +1682,10 @@
                     this.showToast('Failed to play song: ' + error.message, 'error');
                 }
             }
-
             async playSongById(songId) {
                 try {
                     const response = await fetch(`${this.baseUrl}/song/${songId}`);
                     const song = await response.json();
-
                     // Add to current visible songs if not already there
                     const existingIndex = this.currentVisibleSongs.findIndex(s => s.song_id === songId);
                     if (existingIndex === -1) {
@@ -1757,13 +1699,11 @@
                     this.showError('Failed to load song: ' + error.message);
                 }
             }
-
             async playNext() {
                 if (this.isShuffleMode && this.shuffleQueue.length > 0) {
                     this.playNextShuffle();
                 } else {
                     let nextIndex = this.currentSongIndex + 1;
-
                     if (nextIndex >= this.currentVisibleSongs.length) {
                         if (this.hasMorePages) {
                             await this.loadMoreSongs();
@@ -1779,7 +1719,6 @@
                     }
                 }
             }
-
             playPrevious() {
                 if (this.isShuffleMode && this.shuffleQueue.length > 0) {
                     this.playPreviousShuffle();
@@ -1791,7 +1730,6 @@
                     this.playSongAtIndex(prevIndex);
                 }
             }
-
             togglePlay() {
                 if (this.audioPlayer) {
                     if (this.isPlaying) {
@@ -1801,13 +1739,11 @@
                     }
                 }
             }
-
             seekTo() {
                 if (this.audioPlayer) {
                     this.audioPlayer.currentTime = this.progressSlider.value;
                 }
             }
-
             async toggleShuffle() {
                 this.isShuffleMode = !this.isShuffleMode;
                 this.shuffleBtn.style.background = this.isShuffleMode ?
@@ -1822,16 +1758,13 @@
                     this.showToast('Shuffle mode disabled', 'success');
                 }
             }
-
             async loadShuffleQueue() {
                 try {
                     const response = await fetch(`${this.baseUrl}/random-song-ids?count=100`);
                     const data = await response.json();
-
                     if (data.song_ids && data.song_ids.length > 0) {
                         const songsResponse = await fetch(`${this.baseUrl}/songs-by-ids?ids=${data.song_ids.join(',')}`);
                         const songsData = await songsResponse.json();
-
                         this.shuffleQueue = songsData.songs || [];
                         this.shuffleIndex = -1;
                         console.log(`Loaded ${this.shuffleQueue.length} songs for shuffle`);
@@ -1841,21 +1774,18 @@
                     this.showToast('Failed to load shuffle queue', 'error');
                 }
             }
-
             playNextShuffle() {
                 if (this.shuffleQueue.length === 0) return;
                 this.shuffleIndex = (this.shuffleIndex + 1) % this.shuffleQueue.length;
                 const song = this.shuffleQueue[this.shuffleIndex];
                 this.playShuffleSong(song);
             }
-
             playPreviousShuffle() {
                 if (this.shuffleQueue.length === 0) return;
                 this.shuffleIndex = this.shuffleIndex <= 0 ? this.shuffleQueue.length - 1 : this.shuffleIndex - 1;
                 const song = this.shuffleQueue[this.shuffleIndex];
                 this.playShuffleSong(song);
             }
-
             async playShuffleSong(song) {
                 this.updateNowPlaying(song);
                 if (this.audioPlayer) {
@@ -1873,7 +1803,6 @@
                     this.playNextShuffle();
                 }
             }
-
             setupPlaylists(playlists) {
                 this.playlistButtonsDiv.innerHTML = '';
                 this.playlistButtonsDiv.innerHTML = '';
@@ -1886,7 +1815,6 @@
                     this.showMainView();
                 };
                 this.playlistButtonsDiv.appendChild(allBtn);
-
                 Object.keys(playlists).forEach((playlistName) => {
                     const btn = document.createElement('button');
                     btn.className = 'playlist-btn';
@@ -1898,7 +1826,6 @@
                     this.playlistButtonsDiv.appendChild(btn);
                 });
             }
-
             setActivePlaylist(playlistName) {
                 this.currentPlaylist = playlistName;
                 document.querySelectorAll('.playlist-btn').forEach(btn => {
@@ -1909,7 +1836,6 @@
                     activeBtn.classList.add('active');
                 }
             }
-
             async showPlaylistView(playlistName) {
                 this.currentView = 'playlist';
                 this.currentPlaylist = playlistName;
@@ -1920,12 +1846,10 @@
                 this.playlistHeader.classList.add('active');
                 document.body.classList.add('playlist-view');
                 this.searchInput.placeholder = `Search in ${playlistName}...`;
-                
-                this.currentPlaylistName.textContent = playlistName; // Set playlist name
+                                this.currentPlaylistName.textContent = playlistName; // Set playlist name
                 await this.loadSongs(1, true);
                 this.currentPlaylistCount.textContent = `${this.currentPlaylistTotalSongs} song${this.currentPlaylistTotalSongs !== 1 ? 's' : ''}`;
             }
-
             async showMainView() {
                 this.currentView = 'main';
                 this.currentPlaylist = 'all';
@@ -1939,31 +1863,25 @@
                 this.setActivePlaylist('all');
                 await this.loadSongs(1, true);
             }
-
             // Helper functions
             getDisplayName(song) {
                 return song.track_name || song.filename?.replace(/\.(mp3|webm|ogg)$/i, '').replace(/-/g, ' ') || 'Unknown Track';
             }
-
             getArtistName(song) {
                 return song.artists_string || 'Unknown Artist';
             }
-
             getAlbumName(song) {
                 return song.album_name || 'Unknown Album';
             }
-
             getCoverArt(song) {
                 return song.cover_art_url || null;
             }
-
             formatTime(seconds) {
                 if (!isFinite(seconds)) return '0:00';
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }
-
             updateNowPlaying(song) {
                 this.nowPlayingTitle.textContent = this.getDisplayName(song);
                 this.nowPlayingArtist.textContent = this.getArtistName(song);
@@ -1974,7 +1892,6 @@
                     this.nowPlayingArt.innerHTML = '🎵';
                 }
             }
-
             updatePlayingState() {
                 document.querySelectorAll('.song-card').forEach((card, idx) => {
                     const playIndicator = card.querySelector('.play-indicator');
@@ -1991,7 +1908,6 @@
                     }
                 });
             }
-
             downloadSong(song, event) {
                 event.stopPropagation();
                 const url = song.github_url;
@@ -2003,11 +1919,9 @@
                 document.body.removeChild(link);
                 this.showToast(`Downloading: ${this.getDisplayName(song)}`, 'success');
             }
-
             downloadPlaylist() {
                 if (this.currentView === 'playlist' && this.currentPlaylist !== 'all') {
                     this.showToast(`Starting download of ${this.currentPlaylistTotalSongs} songs from ${this.currentPlaylist}`, 'success');
-
                     this.allSongs.forEach((song, index) => {
                         setTimeout(() => {
                             const url = song.github_url;
@@ -2017,7 +1931,6 @@
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-
                             if (index === this.allSongs.length - 1) {
                                 this.showToast(`Playlist download completed: ${this.currentPlaylist}`, 'success');
                             }
@@ -2025,7 +1938,6 @@
                     });
                 }
             }
-
             playNextSong(song, event) {
                 event.stopPropagation();
                 const songIndex = this.currentVisibleSongs.findIndex(s =>
@@ -2037,23 +1949,18 @@
                     this.showToast('No next song available', 'error');
                 }
             }
-
             handleKeyboard(event) {
                 // If an input field is focused, let the input handle the keydown
                 if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
                     // Allow Escape to close overlay/panel even if input is focused
                     if (event.key === 'Escape') {
-                        if (this.advancedSearchPanel.classList.contains('show')) {
-                            this.hideAdvancedSearch();
+                        if (this.searchOverlay.classList.contains('show')) { // Check if overlay is open
+                            this.hideSuggestions(); // This will also hide advanced search if open
                             event.preventDefault(); // Prevent further propagation
-                        } else if (this.searchOverlay.classList.contains('show')) {
-                            this.hideSuggestions();
-                            event.preventDefault();
                         }
                     }
                     return; // Still return for other keys to allow normal input behavior
                 }
-
                 switch (event.code) {
                     case 'Space':
                         event.preventDefault();
@@ -2071,22 +1978,15 @@
                         if (this.currentView === 'playlist') {
                             this.showMainView();
                         }
-                        if (this.advancedSearchPanel.classList.contains('show')) {
-                            this.hideAdvancedSearch();
-                        }
-                        if (this.searchOverlay.classList.contains('show')) {
-                            this.hideSuggestions();
-                        }
+                        // The overlay escape handling is now above, for all cases.
                         break;
                 }
             }
-
             showLoading(show) {
                 if (show) {
                     this.contentDiv.innerHTML = '<div class="loading">Loading your music library...</div>';
                 }
             }
-
             showToast(message, type = 'success') {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
@@ -2098,12 +1998,10 @@
                     setTimeout(() => document.body.removeChild(toast), 300);
                 }, 3000);
             }
-
             showError(message) {
                 this.showToast(message, 'error');
             }
         }
-
         // Initialize the enhanced music player when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             new EnhancedMusicPlayer();
