@@ -1625,6 +1625,7 @@
                 const card = document.createElement('div');
                 card.className = 'song-card';
                 card.dataset.songIndex = index; // Add data attribute for index
+                card.dataset.songId = song.song_id || song.filename; // Add unique song identifier
                 const coverArt = this.getCoverArt(song);
                 const coverArtHtml = coverArt ?
                     `<img src="${coverArt}" alt="Album Art" onerror="this.style.display='none'; this.parentElement.innerHTML='🎵';">` :
@@ -2069,9 +2070,19 @@ async playShuffleSong(song) {
             }
 
             updatePlayingState() {
-                document.querySelectorAll('.song-card').forEach((card, idx) => {
+                document.querySelectorAll('.song-card').forEach((card) => {
                     const playIndicator = card.querySelector('.play-indicator');
-                    if (idx === this.currentSongIndex && !this.isShuffleMode) {
+                    const cardSongId = card.dataset.songId;
+                    
+                    // Check if this card represents the currently playing song
+                    // Compare by song ID or filename for more accurate matching
+                    const isCurrentSong = this.currentSong && (
+                        (this.currentSong.song_id && cardSongId === this.currentSong.song_id) ||
+                        (this.currentSong.filename && cardSongId === this.currentSong.filename) ||
+                        (card.dataset.songIndex && parseInt(card.dataset.songIndex) === this.currentSongIndex && !this.isShuffleMode)
+                    );
+                    
+                    if (isCurrentSong) {
                         card.classList.add('playing');
                         if (playIndicator) {
                             playIndicator.innerHTML = this.audioPlayer && !this.audioPlayer.paused ? '⏸' : '▶️';
