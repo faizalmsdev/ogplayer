@@ -140,16 +140,15 @@
             color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
         }
-        /* New/Modified CSS for search suggestions overlay */
         .search-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7); /* Semi-transparent black shade */
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
-            z-index: 10000; /* Ensure it's on top of everything */
+            z-index: 10000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -166,10 +165,10 @@
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             width: 90%;
-            max-width: 600px; /* Increased max width for input + advanced */
+            max-width: 600px;
             max-height: 80vh;
-            display: flex; /* Make it a flex container */
-            flex-direction: column; /* Stack children vertically */
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             position: relative;
         }
@@ -180,7 +179,7 @@
             padding: 15px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             background: rgba(255, 255, 255, 0.05);
-            flex-shrink: 0; /* Prevent header from shrinking */
+            flex-shrink: 0;
         }
         .search-input-in-popup-wrapper {
             flex: 1;
@@ -232,18 +231,14 @@
             background: rgba(69, 183, 209, 0.8);
             transform: scale(1.1);
         }
-
-        /* New wrapper for content that switches between suggestions and advanced search */
         .search-popup-content-wrapper {
-            flex: 1; /* Allow it to grow and take available space */
-            overflow-y: auto; /* Enable scrolling for content */
-            padding: 0 20px 20px; /* Add padding for content */
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px;
         }
-
         .search-suggestions-list {
-            /* flex: 1; */ /* Removed flex:1 here, now handled by parent wrapper */
-            overflow-y: auto; /* Keep this for scrolling suggestions */
-            padding: 0; /* Remove padding here, moved to wrapper */
+            overflow-y: auto;
+            padding: 0;
         }
         .suggestion-item {
             padding: 12px 15px;
@@ -289,16 +284,15 @@
             background: rgba(69, 183, 209, 0.8);
             transform: scale(1.1);
         }
-        /* Advanced search panel now positioned as a sibling within the content wrapper */
         .advanced-search-panel {
-            background: rgba(0, 0, 0, 0.98); /* Slightly darker for contrast */
+            background: rgba(0, 0, 0, 0.98);
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
-            z-index: 10001; /* Keep z-index if needed for other elements, but not for positioning within wrapper */
+            z-index: 10001;
             padding: 20px;
-            width: 100%; /* Take full width of its parent */
-            display: none; /* Hidden by default */
+            width: 100%;
+            display: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
         .advanced-search-panel.show {
@@ -390,37 +384,48 @@
             font-weight: 500;
             transition: all 0.3s ease;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
         }
+
         #shuffleBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
         }
-        #shuffleBtn.shuffle-small {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
-            min-height: 36px;
-            padding: 0;
+
+        #shuffleBtn.shuffle-active {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            padding-right: 50px; /* Make room for play button */
+        }
+
+        #shuffleBtn.shuffle-active:hover {
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+        }
+
+        .shuffle-play-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             border-radius: 50%;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            color: white;
-            cursor: pointer;
-            font-size: 18px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: none;
         }
-        #shuffleBtn.shuffle-small::before {
-            content: '🔀';
-            font-size: 18px;
-            display: block;
-        }
-        #shuffleBtn.shuffle-small:hover {
-            transform: translateY(-2px) scale(1.08);
-            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.25);
+
+        .shuffle-play-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
         }
         .search-info {
             display: none;
@@ -800,18 +805,17 @@
                 min-width: auto;
                 max-width: none;
             }
-            /* Search suggestions popup now takes more vertical space on mobile */
             .search-suggestions-popup {
                 width: 95%;
-                max-width: none; /* Remove max-width on mobile to allow it to stretch */
-                height: 90vh; /* Make it take more vertical space */
-                max-height: 90vh; /* Ensure it doesn't exceed viewport height */
+                max-width: none;
+                height: 90vh;
+                max-height: 90vh;
             }
             .search-popup-content-wrapper {
-                padding: 0 15px 15px; /* Adjust padding for mobile */
+                padding: 0 15px 15px;
             }
             .advanced-search-panel {
-                padding: 15px; /* Adjust padding for mobile */
+                padding: 15px;
             }
             .song-grid {
                 grid-template-columns: 1fr;
@@ -925,7 +929,10 @@
                 </div>
                 <div class="search-controls">
                     <button class="search-mode-btn" id="advancedSearchBtn" title="Advanced Search">⚙️</button>
-                    <button id="shuffleBtn" class="shuffle-small" title="Shuffle"></button>
+                    <button id="shuffleBtn" title="Shuffle">
+                        <span>🔀</span>
+                        <span>Shuffle</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1037,8 +1044,9 @@
                 this.currentPage = 1;
                 this.hasMorePages = true;
                 this.currentPlaylist = 'all';
-                this.currentPlaylistTotalSongs = 0; // New property to store total songs for current playlist
+                this.currentPlaylistTotalSongs = 0;
                 this.currentSongIndex = -1;
+                this.currentSong = null; // Track the actual current song object
                 this.isPlaying = false;
                 this.currentQuery = '';
                 this.shuffleQueue = [];
@@ -1048,30 +1056,33 @@
                 this.currentView = 'main';
                 this.allPlaylists = {};
                 this.audioPlayer = null;
-                this.searchMode = 'basic'; // 'basic', 'advanced', 'multi'
+                this.searchMode = 'basic';
                 this.currentSearchType = 'basic';
                 this.lastSearchInfo = null;
-                this.quickSearchTimeout = null; // For debouncing quick search
+                this.quickSearchTimeout = null;
+                this.shuffleTimeout = null; // Add timeout for shuffle to prevent rapid firing
+                this.isChangingSong = false; // Add this new property
                 this.initializeElements();
                 this.attachEventListeners();
-                this.setupMediaSession(); // Call setupMediaSession here
+                this.setupMediaSession();
                 this.loadInitialData();
             }
+
             initializeElements() {
                 // Main DOM elements
                 this.playlistButtonsDiv = document.getElementById('playlistButtons');
                 this.contentDiv = document.getElementById('content');
                 this.loadingMore = document.getElementById('loadingMore');
-                this.searchInput = document.getElementById('searchInput'); // Main header search input
+                this.searchInput = document.getElementById('searchInput');
                 // Search Overlay elements
                 this.searchOverlay = document.getElementById('searchOverlay');
                 this.searchSuggestionsPopup = document.getElementById('searchSuggestionsPopup');
-                this.searchPopupContentWrapper = document.querySelector('.search-popup-content-wrapper'); // New element
+                this.searchPopupContentWrapper = document.querySelector('.search-popup-content-wrapper');
                 this.searchSuggestionsList = document.getElementById('searchSuggestionsList');
                 this.closeSuggestionsBtn = document.getElementById('closeSuggestionsBtn');
-                this.searchInputInPopup = document.getElementById('searchInputInPopup'); // Input inside the popup
+                this.searchInputInPopup = document.getElementById('searchInputInPopup');
                 this.searchIconInPopup = document.getElementById('searchIconInPopup');
-                this.advancedSearchBtnInPopup = document.getElementById('advancedSearchBtnInPopup'); // Advanced button inside popup
+                this.advancedSearchBtnInPopup = document.getElementById('advancedSearchBtnInPopup');
                 this.shuffleBtn = document.getElementById('shuffleBtn');
                 this.nowPlayingDiv = document.getElementById('nowPlaying');
                 this.nowPlayingTitle = document.getElementById('nowPlayingTitle');
@@ -1083,7 +1094,7 @@
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
                 this.playPauseBtn = document.getElementById('playPauseBtn');
-                // Advanced search elements (now inside the popup)
+                // Advanced search elements
                 this.advancedSearchPanel = document.getElementById('advancedSearchPanel');
                 this.trackSearchInput = document.getElementById('trackSearchInput');
                 this.artistSearchInput = document.getElementById('artistSearchInput');
@@ -1104,6 +1115,7 @@
                 this.currentPlaylistCount = document.getElementById('currentPlaylistCount');
                 this.playlistDownloadBtn = document.getElementById('playlistDownloadBtn');
             }
+
             attachEventListeners() {
                 // Main search input (triggers the overlay)
                 this.searchInput.addEventListener('input', () => this.handleMainSearchInput());
@@ -1119,9 +1131,9 @@
                         this.hideSuggestions();
                     }
                 });
-                // Advanced search functionality (now within the popup)
+                // Advanced search functionality
                 this.advancedSearchBtnInPopup.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent click from propagating to overlay and closing it
+                    e.stopPropagation();
                     this.toggleAdvancedSearch();
                 });
                 this.executeAdvancedSearch.addEventListener('click', () => this.performAdvancedSearch());
@@ -1142,6 +1154,7 @@
                 // Keyboard shortcuts
                 document.addEventListener('keydown', (e) => this.handleKeyboard(e));
             }
+
             setupMediaSession() {
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.setActionHandler('play', () => {
@@ -1162,62 +1175,63 @@
                     });
                 } else {
                     console.warn('Media Session API is not supported in this browser.');
-                    this.showToast('Media Session API not supported. Lock screen controls may not work.', 'error');
                 }
             }
+
             handleMainSearchInput() {
                 const query = this.searchInput.value.trim();
                 if (query.length >= 2) {
-                    this.searchInputInPopup.value = query; // Copy query to popup input
-                    this.showSuggestions(); // Show overlay immediately on typing
-                    this.debounceQuickSearch(query); // Debounce the actual search
+                    this.searchInputInPopup.value = query;
+                    this.showSuggestions();
+                    this.debounceQuickSearch(query);
                 } else {
-                    this.searchSuggestionsList.innerHTML = ''; // Clear suggestions if query is too short
-                    this.hideSuggestions(); // Hide overlay if query is too short
+                    this.searchSuggestionsList.innerHTML = '';
+                    this.hideSuggestions();
                 }
             }
+
             handleMainSearchInputFocus() {
-                // When main input is focused, show the overlay and focus the popup input
                 this.searchInputInPopup.value = this.searchInput.value.trim();
                 this.showSuggestions();
                 this.searchInputInPopup.focus();
-                // If there's already a query, trigger a quick search
                 if (this.searchInputInPopup.value.length >= 2) {
                     this.debounceQuickSearch(this.searchInputInPopup.value.trim());
                 } else {
-                    // If no query, ensure suggestions list is empty and advanced search is hidden
                     this.searchSuggestionsList.innerHTML = '';
                     this.hideAdvancedSearch();
                 }
             }
+
             handlePopupSearchInput() {
                 const query = this.searchInputInPopup.value.trim();
-                this.searchInput.value = query; // Keep main input in sync
+                this.searchInput.value = query;
                 if (query.length >= 2) {
                     this.debounceQuickSearch(query);
                 } else {
-                    this.searchSuggestionsList.innerHTML = ''; // Clear suggestions if query is too short
+                    this.searchSuggestionsList.innerHTML = '';
                 }
             }
+
             handlePopupSearchInputKeydown(event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     const query = this.searchInputInPopup.value.trim();
                     if (query) {
                         this.performBasicSearch(query);
-                        this.hideSuggestions(); // Hide overlay after performing search
+                        this.hideSuggestions();
                     }
                 }
             }
+
             debounceQuickSearch(query) {
                 clearTimeout(this.quickSearchTimeout);
                 this.quickSearchTimeout = setTimeout(() => {
                     this.performQuickSearch(query);
-                }, 300); // Debounce time for quick search
+                }, 300);
             }
+
             async performQuickSearch(query) {
                 try {
-                    // Show a loading indicator in the suggestions list
                     this.searchSuggestionsList.innerHTML = `
                         <div class="loading" style="padding: 20px; text-align: center;">Loading suggestions...</div>
                     `;
@@ -1233,6 +1247,7 @@
                     `;
                 }
             }
+
             displaySuggestions(suggestions) {
                 if (suggestions.length === 0) {
                     this.searchSuggestionsList.innerHTML = `
@@ -1253,8 +1268,8 @@
                     item.addEventListener('click', () => {
                         const text = item.dataset.text;
                         const songId = item.dataset.songId;
-                        this.searchInput.value = text; // Update main input
-                        this.searchInputInPopup.value = text; // Update popup input
+                        this.searchInput.value = text;
+                        this.searchInputInPopup.value = text;
                         this.hideSuggestions();
                         if (songId) {
                             this.playSongById(songId);
@@ -1264,20 +1279,23 @@
                     });
                 });
             }
+
             showSuggestions() {
                 this.searchOverlay.classList.add('show');
-                this.searchInput.disabled = true; // Disable main input when overlay is active
-                this.searchInputInPopup.focus(); // Focus the input inside the popup
+                this.searchInput.disabled = true;
+                this.searchInputInPopup.focus();
             }
+
             hideSuggestions() {
                 this.searchOverlay.classList.remove('show');
-                this.searchInput.disabled = false; // Re-enable main input
-                this.hideAdvancedSearch(); // Also hide advanced search if open and show suggestions
-                this.searchInput.value = ''; // Clear main search input on close
-                this.searchInputInPopup.value = ''; // Clear popup search input on close
-                this.searchSuggestionsList.innerHTML = ''; // Clear suggestions
-                this.hideSearchInfo(); // Hide search info when search overlay is closed
+                this.searchInput.disabled = false;
+                this.hideAdvancedSearch();
+                this.searchInput.value = '';
+                this.searchInputInPopup.value = '';
+                this.searchSuggestionsList.innerHTML = '';
+                this.hideSearchInfo();
             }
+
             toggleAdvancedSearch() {
                 if (this.advancedSearchPanel.classList.contains('show')) {
                     this.hideAdvancedSearch();
@@ -1285,18 +1303,20 @@
                     this.showAdvancedSearch();
                 }
             }
+
             showAdvancedSearch() {
                 this.advancedSearchPanel.classList.add('show');
-                this.searchSuggestionsList.style.display = 'none'; // Hide suggestions
+                this.searchSuggestionsList.style.display = 'none';
                 this.advancedSearchBtnInPopup.classList.add('active');
-                // Scroll to top of the content wrapper to ensure advanced search fields are visible
                 this.searchPopupContentWrapper.scrollTop = 0;
             }
+
             hideAdvancedSearch() {
                 this.advancedSearchPanel.classList.remove('show');
-                this.searchSuggestionsList.style.display = 'block'; // Show suggestions again
+                this.searchSuggestionsList.style.display = 'block';
                 this.advancedSearchBtnInPopup.classList.remove('active');
             }
+
             clearAdvancedSearchFields() {
                 this.trackSearchInput.value = '';
                 this.artistSearchInput.value = '';
@@ -1305,15 +1325,15 @@
                 this.searchSort.value = 'relevance';
                 this.searchOrder.value = 'asc';
             }
+
             async performAdvancedSearch() {
                 const trackQuery = this.trackSearchInput.value.trim();
                 const artistQuery = this.artistSearchInput.value.trim();
                 const albumQuery = this.albumSearchInput.value.trim();
-                const basicQuery = this.searchInputInPopup.value.trim(); // Use popup input for basic part
-                
-                this.hideAdvancedSearch(); // Hide advanced search panel
-                this.hideSuggestions(); // Hide the entire overlay after search
-
+                const basicQuery = this.searchInputInPopup.value.trim();
+                                
+                this.hideAdvancedSearch();
+                this.hideSuggestions();
                 if (trackQuery || artistQuery || albumQuery) {
                     this.currentSearchType = 'multi';
                     await this.performMultiFieldSearch(trackQuery, artistQuery, albumQuery);
@@ -1324,13 +1344,14 @@
                     this.showToast('Please enter search terms', 'error');
                 }
             }
+
             async performBasicSearch(query) {
                 try {
                     this.showLoading(true);
                     this.allSongs = [];
                     this.currentPage = 1;
                     this.hasMorePages = true;
-                    this.currentQuery = query; // Store the query for pagination
+                    this.currentQuery = query;
                     this.currentSearchType = 'basic';
                     this.hideSearchInfo();
                     const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(query)}&page=1&limit=30`);
@@ -1344,13 +1365,14 @@
                     };
                     this.updateVisibleSongs();
                     this.displaySongs();
-                    this.showSearchInfo(); // Show search info after displaying songs
+                    this.showSearchInfo();
                 } catch (error) {
                     this.showError('Basic search failed: ' + error.message);
                 } finally {
                     this.showLoading(false);
                 }
             }
+
             async performMultiFieldSearch(track, artist, album) {
                 try {
                     this.showLoading(true);
@@ -1374,13 +1396,14 @@
                     };
                     this.updateVisibleSongs();
                     this.displaySongs();
-                    this.showSearchInfo(); // Show search info after displaying songs
+                    this.showSearchInfo();
                 } catch (error) {
                     this.showError('Multi-field search failed: ' + error.message);
                 } finally {
                     this.showLoading(false);
                 }
             }
+
             async performAdvancedSingleSearch(query) {
                 try {
                     this.showLoading(true);
@@ -1409,13 +1432,14 @@
                     };
                     this.updateVisibleSongs();
                     this.displaySongs();
-                    this.showSearchInfo(); // Show search info after displaying songs
+                    this.showSearchInfo();
                 } catch (error) {
                     this.showError('Advanced search failed: ' + error.message);
                 } finally {
                     this.showLoading(false);
                 }
             }
+
             showSearchInfo() {
                 if (!this.lastSearchInfo) return;
                 let infoText = '';
@@ -1442,10 +1466,12 @@
                 this.searchInfoStats.textContent = statsText;
                 this.searchInfo.classList.add('show');
             }
+
             hideSearchInfo() {
                 this.searchInfo.classList.remove('show');
                 this.lastSearchInfo = null;
             }
+
             handleScroll() {
                 if (this.isLoadingMore || !this.hasMorePages) return;
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -1456,6 +1482,7 @@
                     this.loadMoreSongs();
                 }
             }
+
             async loadInitialData() {
                 try {
                     await Promise.all([
@@ -1466,6 +1493,7 @@
                     this.showError('Failed to load initial data: ' + error.message);
                 }
             }
+
             async loadPlaylists() {
                 try {
                     const response = await fetch(`${this.baseUrl}/playlists`);
@@ -1476,6 +1504,7 @@
                     console.error('Failed to load playlists:', error);
                 }
             }
+
             async loadSongs(page = 1, resetList = false) {
                 if (resetList) {
                     this.showLoading(true);
@@ -1484,7 +1513,7 @@
                     this.currentPage = 1;
                     this.hasMorePages = true;
                     this.hideSearchInfo();
-                    this.currentPlaylistTotalSongs = 0; // Reset total songs count
+                    this.currentPlaylistTotalSongs = 0;
                 }
                 try {
                     let url;
@@ -1519,11 +1548,9 @@
                     const response = await fetch(url);
                     const data = await response.json();
                     let newSongs = [];
-                    // Correctly determine how to extract songs based on the URL
                     if (url.includes('/search')) {
                         newSongs = data.results || [];
-                        // For search results, total is in data.total_results
-                        if (resetList) { // Only update total for the first page of a new search
+                        if (resetList) {
                             this.lastSearchInfo = {
                                 ...this.lastSearchInfo,
                                 total: data.total_results
@@ -1531,19 +1558,20 @@
                         }
                     } else if (url.includes('/playlist/')) {
                         newSongs = data.songs || [];
-                        if (resetList) { // Only update total for the first page of a new playlist load
+                        if (resetList) {
                             this.currentPlaylistTotalSongs = data.total_songs || 0;
                         }
                     } else if (url.includes('/all-songs')) {
                         newSongs = data.songs || [];
-                        if (resetList) { // Only update total for the first page of all songs load
-                            this.currentPlaylistTotalSongs = data.total_songs || 0; // Assuming all-songs also returns total_songs
+                        if (resetList) {
+                            this.currentPlaylistTotalSongs = data.total_songs || 0;
                         }
                     } else {
                         console.warn('Unexpected URL pattern for song loading:', url);
                         newSongs = [];
                     }
-                                        this.allSongs = [...this.allSongs, ...newSongs];
+                                        
+                    this.allSongs = [...this.allSongs, ...newSongs];
                     this.currentPage = page;
                     this.hasMorePages = data.pagination && data.pagination.has_next;
                     this.updateVisibleSongs();
@@ -1554,6 +1582,7 @@
                     this.showLoading(false);
                 }
             }
+
             async loadMoreSongs() {
                 if (this.isLoadingMore || !this.hasMorePages) return;
                 this.isLoadingMore = true;
@@ -1565,9 +1594,11 @@
                     this.loadingMore.style.display = 'none';
                 }
             }
+
             updateVisibleSongs() {
                 this.currentVisibleSongs = [...this.allSongs];
             }
+
             displaySongs() {
                 if (this.currentVisibleSongs.length === 0) {
                     this.contentDiv.innerHTML = `
@@ -1589,9 +1620,11 @@
                 this.contentDiv.appendChild(songGrid);
                 this.updatePlayingState();
             }
+
             createSongCard(song, index) {
                 const card = document.createElement('div');
                 card.className = 'song-card';
+                card.dataset.songIndex = index; // Add data attribute for index
                 const coverArt = this.getCoverArt(song);
                 const coverArtHtml = coverArt ?
                     `<img src="${coverArt}" alt="Album Art" onerror="this.style.display='none'; this.parentElement.innerHTML='🎵';">` :
@@ -1610,33 +1643,51 @@
                         <button class="action-btn next-btn" title="Play Next">⏭</button>
                         <button class="action-btn download-btn" title="Download">⬇️</button>
                     </div>`;
-                card.onclick = () => this.playSongAtIndex(index);
+                
+                // Fix: Use the correct index from the data attribute
+                card.onclick = () => {
+                    const cardIndex = parseInt(card.dataset.songIndex);
+                    this.playSongAtIndex(cardIndex);
+                };
+                
                 const nextBtn = card.querySelector('.next-btn');
                 nextBtn.onclick = (e) => this.playNextSong(song, e);
                 const downloadBtn = card.querySelector('.download-btn');
                 downloadBtn.onclick = (e) => this.downloadSong(song, e);
                 return card;
             }
+
             async playSongAtIndex(index) {
                 if (index < 0 || index >= this.currentVisibleSongs.length) return;
+                
+                // Clear shuffle mode when manually selecting a song
+                if (this.isShuffleMode) {
+                    this.isShuffleMode = false;
+                    this.shuffleBtn.classList.remove('shuffle-active');
+                    this.shuffleBtn.innerHTML = '<span>🔀</span><span>Shuffle</span>';
+                }
+                
                 this.currentSongIndex = index;
-                const song = this.currentVisibleSongs[index];
+                this.currentSong = this.currentVisibleSongs[index]; // Store the actual song object
+                
                 if (this.audioPlayer) {
                     this.audioPlayer.pause();
                     this.audioPlayer.remove();
                 }
-                this.audioPlayer = new Audio(song.github_url);
+                
+                this.audioPlayer = new Audio(this.currentSong.github_url);
                 this.audioPlayer.autoplay = true;
-                this.updateNowPlaying(song);
+                this.updateNowPlaying(this.currentSong);
                 this.updatePlayingState();
                 this.nowPlayingDiv.style.display = 'block';
+                
                 // Update Media Session metadata for lock screen
                 if ('mediaSession' in navigator) {
-                    const coverArt = this.getCoverArt(song);
+                    const coverArt = this.getCoverArt(this.currentSong);
                     navigator.mediaSession.metadata = new MediaMetadata({
-                        title: this.getDisplayName(song),
-                        artist: this.getArtistName(song),
-                        album: this.getAlbumName(song),
+                        title: this.getDisplayName(this.currentSong),
+                        artist: this.getArtistName(this.currentSong),
+                        album: this.getAlbumName(this.currentSong),
                         artwork: [
                             { src: coverArt || '/placeholder.svg?height=96&width=96', sizes: '96x96', type: 'image/png' },
                             { src: coverArt || '/placeholder.svg?height=128&width=128', sizes: '128x128', type: 'image/png' },
@@ -1647,32 +1698,42 @@
                         ]
                     });
                 }
+                
+                // Fix: Ensure all audio event listeners are properly set up
                 this.audioPlayer.addEventListener('loadedmetadata', () => {
                     this.durationSpan.textContent = this.formatTime(this.audioPlayer.duration);
                     this.progressSlider.max = this.audioPlayer.duration;
                 });
+                
                 this.audioPlayer.addEventListener('timeupdate', () => {
-                    this.currentTimeSpan.textContent = this.formatTime(this.audioPlayer.currentTime);
-                    this.progressSlider.value = this.audioPlayer.currentTime;
+                    if (this.audioPlayer && !isNaN(this.audioPlayer.currentTime) && !isNaN(this.audioPlayer.duration)) {
+                        this.currentTimeSpan.textContent = this.formatTime(this.audioPlayer.currentTime);
+                        this.progressSlider.value = this.audioPlayer.currentTime;
+                    }
                 });
+                
                 this.audioPlayer.addEventListener('ended', () => {
                     this.playNext();
                 });
+                
                 this.audioPlayer.addEventListener('play', () => {
                     this.isPlaying = true;
                     this.playPauseBtn.innerText = '⏸';
                     this.updatePlayingState();
                 });
+                
                 this.audioPlayer.addEventListener('pause', () => {
                     this.isPlaying = false;
                     this.playPauseBtn.innerText = '▶️';
                     this.updatePlayingState();
                 });
+                
                 this.audioPlayer.addEventListener('error', (e) => {
                     console.error('Audio error:', e);
                     this.showToast('Failed to load audio. Trying next song...', 'error');
                     setTimeout(() => this.playNext(), 2000);
                 });
+                
                 try {
                     await this.audioPlayer.play();
                     this.isPlaying = true;
@@ -1682,6 +1743,7 @@
                     this.showToast('Failed to play song: ' + error.message, 'error');
                 }
             }
+
             async playSongById(songId) {
                 try {
                     const response = await fetch(`${this.baseUrl}/song/${songId}`);
@@ -1699,37 +1761,62 @@
                     this.showError('Failed to load song: ' + error.message);
                 }
             }
+
             async playNext() {
-                if (this.isShuffleMode && this.shuffleQueue.length > 0) {
-                    this.playNextShuffle();
-                } else {
-                    let nextIndex = this.currentSongIndex + 1;
-                    if (nextIndex >= this.currentVisibleSongs.length) {
-                        if (this.hasMorePages) {
-                            await this.loadMoreSongs();
-                            if (nextIndex < this.currentVisibleSongs.length) {
+                // Prevent rapid next calls
+                if (this.isChangingSong) return;
+                this.isChangingSong = true;
+                
+                try {
+                    if (this.isShuffleMode && this.shuffleQueue.length > 0) {
+                        this.playNextShuffle();
+                    } else {
+                        let nextIndex = this.currentSongIndex + 1;
+                        if (nextIndex >= this.currentVisibleSongs.length) {
+                            if (this.hasMorePages) {
+                                await this.loadMoreSongs();
+                                if (nextIndex < this.currentVisibleSongs.length) {
+                                    this.playSongAtIndex(nextIndex);
+                                }
+                            } else {
+                                nextIndex = 0;
                                 this.playSongAtIndex(nextIndex);
                             }
                         } else {
-                            nextIndex = 0;
                             this.playSongAtIndex(nextIndex);
                         }
-                    } else {
-                        this.playSongAtIndex(nextIndex);
                     }
+                } finally {
+                    // Reset the flag after a delay
+                    setTimeout(() => {
+                        this.isChangingSong = false;
+                    }, 500);
                 }
             }
+
             playPrevious() {
-                if (this.isShuffleMode && this.shuffleQueue.length > 0) {
-                    this.playPreviousShuffle();
-                } else {
-                    let prevIndex = this.currentSongIndex - 1;
-                    if (prevIndex < 0) {
-                        prevIndex = this.currentVisibleSongs.length - 1;
+                // Prevent rapid previous calls
+                if (this.isChangingSong) return;
+                this.isChangingSong = true;
+                
+                try {
+                    if (this.isShuffleMode && this.shuffleQueue.length > 0) {
+                        this.playPreviousShuffle();
+                    } else {
+                        let prevIndex = this.currentSongIndex - 1;
+                        if (prevIndex < 0) {
+                            prevIndex = this.currentVisibleSongs.length - 1;
+                        }
+                        this.playSongAtIndex(prevIndex);
                     }
-                    this.playSongAtIndex(prevIndex);
+                } finally {
+                    // Reset the flag after a delay
+                    setTimeout(() => {
+                        this.isChangingSong = false;
+                    }, 500);
                 }
             }
+
             togglePlay() {
                 if (this.audioPlayer) {
                     if (this.isPlaying) {
@@ -1739,72 +1826,150 @@
                     }
                 }
             }
+
             seekTo() {
                 if (this.audioPlayer) {
                     this.audioPlayer.currentTime = this.progressSlider.value;
                 }
             }
+
             async toggleShuffle() {
+                // Prevent rapid clicking
+                if (this.shuffleTimeout) return;
+                
+                this.shuffleTimeout = setTimeout(() => {
+                    this.shuffleTimeout = null;
+                }, 1000);
+                
                 this.isShuffleMode = !this.isShuffleMode;
-                this.shuffleBtn.style.background = this.isShuffleMode ?
-                    'linear-gradient(45deg, #4ecdc4, #44a08d)' :
-                    'linear-gradient(45deg, #ff6b6b, #ee5a52)';
+                
                 if (this.isShuffleMode) {
-                    await this.loadShuffleQueue();
-                    this.showToast('Shuffle mode enabled', 'success');
-                } else {
-                    this.shuffleQueue = [];
-                    this.shuffleIndex = -1;
-                    this.showToast('Shuffle mode disabled', 'success');
-                }
-            }
-            async loadShuffleQueue() {
-                try {
-                    const response = await fetch(`${this.baseUrl}/random-song-ids?count=100`);
-                    const data = await response.json();
-                    if (data.song_ids && data.song_ids.length > 0) {
-                        const songsResponse = await fetch(`${this.baseUrl}/songs-by-ids?ids=${data.song_ids.join(',')}`);
-                        const songsData = await songsResponse.json();
-                        this.shuffleQueue = songsData.songs || [];
-                        this.shuffleIndex = -1;
-                        console.log(`Loaded ${this.shuffleQueue.length} songs for shuffle`);
-                    }
-                } catch (error) {
-                    console.error('Failed to load shuffle queue:', error);
-                    this.showToast('Failed to load shuffle queue', 'error');
-                }
-            }
-            playNextShuffle() {
-                if (this.shuffleQueue.length === 0) return;
-                this.shuffleIndex = (this.shuffleIndex + 1) % this.shuffleQueue.length;
-                const song = this.shuffleQueue[this.shuffleIndex];
-                this.playShuffleSong(song);
-            }
-            playPreviousShuffle() {
-                if (this.shuffleQueue.length === 0) return;
-                this.shuffleIndex = this.shuffleIndex <= 0 ? this.shuffleQueue.length - 1 : this.shuffleIndex - 1;
-                const song = this.shuffleQueue[this.shuffleIndex];
-                this.playShuffleSong(song);
-            }
-            async playShuffleSong(song) {
-                this.updateNowPlaying(song);
-                if (this.audioPlayer) {
-                    this.audioPlayer.pause();
-                    this.audioPlayer.remove();
-                }
-                this.audioPlayer = new Audio(song.github_url);
-                try {
-                    await this.audioPlayer.play();
-                    this.isPlaying = true;
-                    this.playPauseBtn.innerText = '⏸';
-                    this.nowPlayingDiv.style.display = 'block';
-                } catch (error) {
-                    console.error('Failed to play shuffle song:', error);
-                    this.playNextShuffle();
-                }
-            }
+                    this.shuffleBtn.classList.add('shuffle-active');
+                    this.shuffleBtn.innerHTML = `
+            <span>🔀</span>
+            <span>Shuffle Active</span>
+            <button class="shuffle-play-btn" title="Play Random Song">▶️</button>
+        `;
+        
+        // Add click listener to the play button
+        const playBtn = this.shuffleBtn.querySelector('.shuffle-play-btn');
+        playBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.playRandomShuffleSong();
+        });
+        
+        await this.loadShuffleQueue();
+        this.showToast('Shuffle mode enabled', 'success');
+    } else {
+        this.shuffleBtn.classList.remove('shuffle-active');
+        this.shuffleBtn.innerHTML = '<span>🔀</span><span>Shuffle</span>';
+        this.shuffleQueue = [];
+        this.shuffleIndex = -1;
+        this.showToast('Shuffle mode disabled', 'success');
+    }
+}
+
+async playRandomShuffleSong() {
+    if (this.shuffleQueue.length === 0) {
+        await this.loadShuffleQueue();
+    }
+    
+    if (this.shuffleQueue.length > 0) {
+        this.shuffleIndex = Math.floor(Math.random() * this.shuffleQueue.length);
+        const randomSong = this.shuffleQueue[this.shuffleIndex];
+        await this.playShuffleSong(randomSong);
+        this.showToast('Playing random song', 'success');
+    }
+}
+
+async playShuffleSong(song) {
+    // Prevent rapid song changes
+    if (this.isChangingSong) return;
+    
+    if (this.audioPlayer && !this.audioPlayer.paused) {
+        this.audioPlayer.pause();
+    }
+    
+    this.currentSong = song;
+    this.updateNowPlaying(song);
+    
+    if (this.audioPlayer) {
+        this.audioPlayer.remove();
+    }
+    
+    this.audioPlayer = new Audio(song.github_url);
+    
+    // Set up all the necessary event listeners for shuffle songs
+    this.audioPlayer.addEventListener('loadedmetadata', () => {
+        this.durationSpan.textContent = this.formatTime(this.audioPlayer.duration);
+        this.progressSlider.max = this.audioPlayer.duration;
+    });
+    
+    this.audioPlayer.addEventListener('timeupdate', () => {
+        if (this.audioPlayer && !isNaN(this.audioPlayer.currentTime) && !isNaN(this.audioPlayer.duration)) {
+            this.currentTimeSpan.textContent = this.formatTime(this.audioPlayer.currentTime);
+            this.progressSlider.value = this.audioPlayer.currentTime;
+        }
+    });
+    
+    this.audioPlayer.addEventListener('ended', () => {
+        // Only auto-play next if not manually changing songs
+        if (!this.isChangingSong) {
+            this.playNext();
+        }
+    });
+    
+    this.audioPlayer.addEventListener('play', () => {
+        this.isPlaying = true;
+        this.playPauseBtn.innerText = '⏸';
+    });
+    
+    this.audioPlayer.addEventListener('pause', () => {
+        this.isPlaying = false;
+        this.playPauseBtn.innerText = '▶️';
+    });
+    
+    this.audioPlayer.addEventListener('error', (e) => {
+        console.error('Shuffle audio error:', e);
+        // Only try next song if not already changing
+        if (!this.isChangingSong) {
+            setTimeout(() => this.playNextShuffle(), 1000);
+        }
+    });
+    
+    try {
+        await this.audioPlayer.play();
+        this.isPlaying = true;
+        this.playPauseBtn.innerText = '⏸';
+        this.nowPlayingDiv.style.display = 'block';
+        
+        // Update Media Session for shuffle songs
+        if ('mediaSession' in navigator) {
+            const coverArt = this.getCoverArt(song);
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: this.getDisplayName(song),
+                artist: this.getArtistName(song),
+                album: this.getAlbumName(song),
+                artwork: [
+                    { src: coverArt || '/placeholder.svg?height=96&width=96', sizes: '96x96', type: 'image/png' },
+                    { src: coverArt || '/placeholder.svg?height=128&width=128', sizes: '128x128', type: 'image/png' },
+                    { src: coverArt || '/placeholder.svg?height=192&width=192', sizes: '192x192', type: 'image/png' },
+                    { src: coverArt || '/placeholder.svg?height=256&width=256', sizes: '256x256', type: 'image/png' },
+                    { src: coverArt || '/placeholder.svg?height=384&width=384', sizes: '384x384', type: 'image/png' },
+                    { src: coverArt || '/placeholder.svg?height=512&width=512', sizes: '512x512', type: 'image/png' }
+                ]
+            });
+        }
+    } catch (error) {
+        console.error('Failed to play shuffle song:', error);
+        // Only try next song if not already changing
+        if (!this.isChangingSong) {
+            setTimeout(() => this.playNextShuffle(), 1000);
+        }
+    }
+}
+
             setupPlaylists(playlists) {
-                this.playlistButtonsDiv.innerHTML = '';
                 this.playlistButtonsDiv.innerHTML = '';
                 const allBtn = document.createElement('button');
                 allBtn.className = 'playlist-btn active';
@@ -1826,6 +1991,7 @@
                     this.playlistButtonsDiv.appendChild(btn);
                 });
             }
+
             setActivePlaylist(playlistName) {
                 this.currentPlaylist = playlistName;
                 document.querySelectorAll('.playlist-btn').forEach(btn => {
@@ -1836,6 +2002,7 @@
                     activeBtn.classList.add('active');
                 }
             }
+
             async showPlaylistView(playlistName) {
                 this.currentView = 'playlist';
                 this.currentPlaylist = playlistName;
@@ -1846,10 +2013,12 @@
                 this.playlistHeader.classList.add('active');
                 document.body.classList.add('playlist-view');
                 this.searchInput.placeholder = `Search in ${playlistName}...`;
-                                this.currentPlaylistName.textContent = playlistName; // Set playlist name
+                                
+                this.currentPlaylistName.textContent = playlistName;
                 await this.loadSongs(1, true);
                 this.currentPlaylistCount.textContent = `${this.currentPlaylistTotalSongs} song${this.currentPlaylistTotalSongs !== 1 ? 's' : ''}`;
             }
+
             async showMainView() {
                 this.currentView = 'main';
                 this.currentPlaylist = 'all';
@@ -1863,25 +2032,31 @@
                 this.setActivePlaylist('all');
                 await this.loadSongs(1, true);
             }
+
             // Helper functions
             getDisplayName(song) {
                 return song.track_name || song.filename?.replace(/\.(mp3|webm|ogg)$/i, '').replace(/-/g, ' ') || 'Unknown Track';
             }
+
             getArtistName(song) {
                 return song.artists_string || 'Unknown Artist';
             }
+
             getAlbumName(song) {
                 return song.album_name || 'Unknown Album';
             }
+
             getCoverArt(song) {
                 return song.cover_art_url || null;
             }
+
             formatTime(seconds) {
                 if (!isFinite(seconds)) return '0:00';
                 const mins = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }
+
             updateNowPlaying(song) {
                 this.nowPlayingTitle.textContent = this.getDisplayName(song);
                 this.nowPlayingArtist.textContent = this.getArtistName(song);
@@ -1892,10 +2067,11 @@
                     this.nowPlayingArt.innerHTML = '🎵';
                 }
             }
+
             updatePlayingState() {
                 document.querySelectorAll('.song-card').forEach((card, idx) => {
                     const playIndicator = card.querySelector('.play-indicator');
-                    if (idx === this.currentSongIndex) {
+                    if (idx === this.currentSongIndex && !this.isShuffleMode) {
                         card.classList.add('playing');
                         if (playIndicator) {
                             playIndicator.innerHTML = this.audioPlayer && !this.audioPlayer.paused ? '⏸' : '▶️';
@@ -1908,6 +2084,7 @@
                     }
                 });
             }
+
             downloadSong(song, event) {
                 event.stopPropagation();
                 const url = song.github_url;
@@ -1919,6 +2096,7 @@
                 document.body.removeChild(link);
                 this.showToast(`Downloading: ${this.getDisplayName(song)}`, 'success');
             }
+
             downloadPlaylist() {
                 if (this.currentView === 'playlist' && this.currentPlaylist !== 'all') {
                     this.showToast(`Starting download of ${this.currentPlaylistTotalSongs} songs from ${this.currentPlaylist}`, 'success');
@@ -1938,6 +2116,7 @@
                     });
                 }
             }
+
             playNextSong(song, event) {
                 event.stopPropagation();
                 const songIndex = this.currentVisibleSongs.findIndex(s =>
@@ -1949,17 +2128,16 @@
                     this.showToast('No next song available', 'error');
                 }
             }
+
             handleKeyboard(event) {
-                // If an input field is focused, let the input handle the keydown
                 if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
-                    // Allow Escape to close overlay/panel even if input is focused
                     if (event.key === 'Escape') {
-                        if (this.searchOverlay.classList.contains('show')) { // Check if overlay is open
-                            this.hideSuggestions(); // This will also hide advanced search if open
-                            event.preventDefault(); // Prevent further propagation
+                        if (this.searchOverlay.classList.contains('show')) {
+                            this.hideSuggestions();
+                            event.preventDefault();
                         }
                     }
-                    return; // Still return for other keys to allow normal input behavior
+                    return;
                 }
                 switch (event.code) {
                     case 'Space':
@@ -1978,15 +2156,16 @@
                         if (this.currentView === 'playlist') {
                             this.showMainView();
                         }
-                        // The overlay escape handling is now above, for all cases.
                         break;
                 }
             }
+
             showLoading(show) {
                 if (show) {
                     this.contentDiv.innerHTML = '<div class="loading">Loading your music library...</div>';
                 }
             }
+
             showToast(message, type = 'success') {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
@@ -1998,10 +2177,45 @@
                     setTimeout(() => document.body.removeChild(toast), 300);
                 }, 3000);
             }
+
             showError(message) {
                 this.showToast(message, 'error');
             }
+
+            playNextShuffle() {
+                if (this.shuffleQueue.length === 0) return;
+                // Pick a random song instead of sequential
+                this.shuffleIndex = Math.floor(Math.random() * this.shuffleQueue.length);
+                const song = this.shuffleQueue[this.shuffleIndex];
+                this.playShuffleSong(song);
+            }
+
+            playPreviousShuffle() {
+                if (this.shuffleQueue.length === 0) return;
+                // Pick a random song instead of sequential
+                this.shuffleIndex = Math.floor(Math.random() * this.shuffleQueue.length);
+                const song = this.shuffleQueue[this.shuffleIndex];
+                this.playShuffleSong(song);
+            }
+
+            async loadShuffleQueue() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/random-song-ids?count=100`);
+                    const data = await response.json();
+                    if (data.song_ids && data.song_ids.length > 0) {
+                        const songsResponse = await fetch(`${this.baseUrl}/songs-by-ids?ids=${data.song_ids.join(',')}`);
+                        const songsData = await songsResponse.json();
+                        this.shuffleQueue = songsData.songs || [];
+                        this.shuffleIndex = -1;
+                        console.log(`Loaded ${this.shuffleQueue.length} songs for shuffle`);
+                    }
+                } catch (error) {
+                    console.error('Failed to load shuffle queue:', error);
+                    this.showToast('Failed to load shuffle queue', 'error');
+                }
+            }
         }
+
         // Initialize the enhanced music player when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             new EnhancedMusicPlayer();
