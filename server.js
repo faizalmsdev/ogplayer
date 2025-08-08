@@ -256,6 +256,107 @@ app.get('/random-song-ids', (req, res) => {
   });
 });
 
+// API: Shuffle play - Get current song and next 5 songs for shuffle
+app.get('/shuffle-play', (req, res) => {
+  const playlistName = req.query.playlist; // Optional - if not provided, shuffle from all songs
+  const exclude = req.query.exclude ? req.query.exclude.split(',') : [];
+  
+  const { songsDb, playlistsDb } = loadCachedData();
+  
+  if (!songsDb) {
+    return res.status(500).json({ error: 'Unable to load songs database' });
+  }
+  
+  let availableSongIds = [];
+  
+  if (playlistName) {
+    // Shuffle from specific playlist
+    if (!playlistsDb) {
+      return res.status(500).json({ error: 'Unable to load playlists database' });
+    }
+    
+    const playlist = playlistsDb.playlists[playlistName];
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+    
+    availableSongIds = playlist.songs ? playlist.songs.filter(id => !exclude.includes(id)) : [];
+  } else {
+    // Shuffle from all songs
+    availableSongIds = Object.keys(songsDb.songs).filter(id => !exclude.includes(id));
+  }
+  
+  if (availableSongIds.length === 0) {
+    return res.json({
+      error: 'No songs available for shuffle',
+      current_song: null,
+      next_songs: [],
+      playlist: playlistName || 'all',
+      total_available: 0
+    });
+  }
+  
+  // Shuffle the available songs
+  const shuffled = availableSongIds.sort(() => 0.5 - Math.random());
+  
+  // Get current song (first in shuffled array)
+  const currentSongId = shuffled[0];
+  const currentSongInfo = songsDb.songs[currentSongId];
+  
+  // Get next 5 songs (or as many as available)
+  const nextSongIds = shuffled.slice(1, 6);
+  const nextSongs = [];
+  
+  nextSongIds.forEach(songId => {
+    const songInfo = songsDb.songs[songId];
+    if (songInfo) {
+      nextSongs.push({
+        song_id: songId,
+        filename: songInfo.filename,
+        track_name: songInfo.metadata?.track_name || 'Unknown',
+        artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
+        album_name: songInfo.metadata?.album_name,
+        duration_formatted: songInfo.metadata?.duration_formatted,
+        cover_art_url: songInfo.metadata?.cover_art_url,
+        cover_art_filename: songInfo.metadata?.cover_art_filename,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+      });
+    }
+  });
+  
+  const currentSong = currentSongInfo ? {
+    song_id: currentSongId,
+    filename: currentSongInfo.filename,
+    track_name: currentSongInfo.metadata?.track_name || 'Unknown',
+    artists_string: currentSongInfo.metadata?.artists_string || 'Unknown Artist',
+    album_name: currentSongInfo.metadata?.album_name,
+    duration_formatted: currentSongInfo.metadata?.duration_formatted,
+    playcount: currentSongInfo.metadata?.playcount,
+    cover_art_url: currentSongInfo.metadata?.cover_art_url,
+    cover_art_filename: currentSongInfo.metadata?.cover_art_filename,
+    playlists: currentSongInfo.playlists,
+    github_url: `${GITHUB_SONGS_BASE_URL}/${currentSongInfo.filename}`
+  } : null;
+  
+  console.log(`Shuffle play ${playlistName ? `for playlist "${playlistName}"` : 'from all songs'}: Current song + ${nextSongs.length} next songs`);
+  
+  res.json({
+    shuffle_info: {
+      playlist: playlistName || 'all',
+      total_available: availableSongIds.length,
+      excluded_count: exclude.length,
+      timestamp: Date.now()
+    },
+    current_song: currentSong,
+    next_songs: nextSongs,
+    queue_info: {
+      current_position: 1,
+      next_count: nextSongs.length,
+      total_in_queue: nextSongs.length + 1
+    }
+  });
+});
+
 // API: Search songs with pagination
 app.get('/search', (req, res) => {
   const query = req.query.q?.toLowerCase() || '';
@@ -1065,6 +1166,7 @@ app.listen(PORT, () => {
   console.log('Shuffle Optimization:');
   console.log('- GET /random-song-ids?count=50&exclude=id1,id2 - Get random song IDs');
   console.log('- GET /songs-by-ids?ids=id1,id2,id3 - Fetch specific songs by IDs');
+  console.log('- GET /shuffle-play?playlist=name&exclude=id1,id2 - Get shuffle play queue');
   console.log('');
   console.log('Standard Endpoints:');
   console.log('- GET /playlists - Get all playlists (lightweight)');
