@@ -54,6 +54,25 @@ function loadCachedData() {
   return { songsDb: songsCache, playlistsDb: playlistsCache };
 }
 
+// Helper function to get filename from song info
+function getFilename(songInfo) {
+  // First try the direct filename property
+  if (songInfo.filename) {
+    return songInfo.filename;
+  }
+  
+  // If not available, extract from file_path or download_info.file_path
+  let filePath = songInfo.file_path || songInfo.download_info?.file_path;
+  
+  if (filePath) {
+    // Extract filename from path (handle both / and \ separators)
+    return filePath.split(/[/\\]/).pop();
+  }
+  
+  // Fallback: generate filename from song_id
+  return songInfo.song_id ? `${songInfo.song_id}.mp3` : 'unknown.mp3';
+}
+
 // Helper function to find playlist by ID or name
 function findPlaylistByIdOrName(playlistsDb, identifier) {
   // First try to find by exact ID
@@ -142,7 +161,7 @@ app.get('/all-songs', (req, res) => {
   
   const allSongs = Object.entries(songsDb.songs).map(([songId, songInfo]) => ({
     song_id: songId,
-    filename: songInfo.filename,
+    filename: getFilename(songInfo),
     track_name: songInfo.metadata?.track_name || 'Unknown',
     artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
     album_name: songInfo.metadata?.album_name,
@@ -151,7 +170,7 @@ app.get('/all-songs', (req, res) => {
     cover_art_url: songInfo.metadata?.cover_art_url,
     cover_art_filename: songInfo.metadata?.cover_art_filename,
     playlists: songInfo.playlists,
-    github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+    github_url: `${GITHUB_SONGS_BASE_URL}/${getFilename(songInfo)}`
   }));
   
   const result = paginateArray(allSongs, page, limit);
@@ -195,10 +214,11 @@ app.get('/playlist/:playlist/songs', (req, res) => {
   songList.forEach(songId => {
     const songInfo = songsDb.songs[songId];
     if (songInfo) {
+      const filename = getFilename(songInfo);
       allSongsWithMetadata.push({
         song_id: songId,
-        filename: songInfo.filename,
-        track_name: songInfo.metadata?.track_name || songInfo.filename.replace(/\.[^/.]+$/, ""),
+        filename: filename,
+        track_name: songInfo.metadata?.track_name || songInfo.filename?.replace(/\.[^/.]+$/, "") || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
@@ -206,7 +226,7 @@ app.get('/playlist/:playlist/songs', (req, res) => {
         duration_formatted: songInfo.metadata?.duration_formatted,
         playcount: songInfo.metadata?.playcount,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`
       });
     }
   });
@@ -246,9 +266,10 @@ app.get('/songs-by-ids', (req, res) => {
   songIds.forEach(songId => {
     const songInfo = songsDb.songs[songId.trim()];
     if (songInfo) {
+      const filename = getFilename(songInfo);
       songs.push({
         song_id: songId.trim(),
-        filename: songInfo.filename,
+        filename: filename,
         track_name: songInfo.metadata?.track_name || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         album_name: songInfo.metadata?.album_name,
@@ -257,7 +278,7 @@ app.get('/songs-by-ids', (req, res) => {
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`
       });
     }
   });
@@ -365,23 +386,24 @@ app.get('/shuffle-play', (req, res) => {
   nextSongIds.forEach(songId => {
     const songInfo = songsDb.songs[songId];
     if (songInfo) {
+      const filename = getFilename(songInfo);
       nextSongs.push({
         song_id: songId,
-        filename: songInfo.filename,
+        filename: filename,
         track_name: songInfo.metadata?.track_name || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         album_name: songInfo.metadata?.album_name,
         duration_formatted: songInfo.metadata?.duration_formatted,
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`
       });
     }
   });
   
   const currentSong = currentSongInfo ? {
     song_id: currentSongId,
-    filename: currentSongInfo.filename,
+    filename: getFilename(currentSongInfo),
     track_name: currentSongInfo.metadata?.track_name || 'Unknown',
     artists_string: currentSongInfo.metadata?.artists_string || 'Unknown Artist',
     album_name: currentSongInfo.metadata?.album_name,
@@ -390,7 +412,7 @@ app.get('/shuffle-play', (req, res) => {
     cover_art_url: currentSongInfo.metadata?.cover_art_url,
     cover_art_filename: currentSongInfo.metadata?.cover_art_filename,
     playlists: currentSongInfo.playlists,
-    github_url: `${GITHUB_SONGS_BASE_URL}/${currentSongInfo.filename}`
+    github_url: `${GITHUB_SONGS_BASE_URL}/${getFilename(currentSongInfo)}`
   } : null;
   
   console.log(`Shuffle play ${playlistInfo ? `for playlist "${playlistInfo.display_name}" (${playlistInfo.id})` : 'from all songs'}: Current song + ${nextSongs.length} next songs`);
@@ -504,16 +526,17 @@ app.get('/search', (req, res) => {
     const albumName = (songInfo.metadata?.album_name || '').toLowerCase();
     
     if (trackName.includes(query) || artistsString.includes(query) || albumName.includes(query)) {
+      const filename = getFilename(songInfo);
       allResults.push({
         song_id: songId,
-        filename: songInfo.filename,
+        filename: filename,
         track_name: songInfo.metadata?.track_name,
         artists_string: songInfo.metadata?.artists_string,
         album_name: songInfo.metadata?.album_name,
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`
       });
     }
   });
@@ -546,7 +569,7 @@ app.get('/song/:songId', (req, res) => {
   
   res.json({
     song_id: songId,
-    filename: songInfo.filename,
+    filename: getFilename(songInfo),
     track_name: songInfo.metadata?.track_name,
     artists_string: songInfo.metadata?.artists_string,
     cover_art_url: songInfo.metadata?.cover_art_url,
@@ -556,7 +579,7 @@ app.get('/song/:songId', (req, res) => {
     playcount: songInfo.metadata?.playcount,
     playlists: songInfo.playlists,
     metadata: songInfo.metadata,
-    github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+    github_url: `${GITHUB_SONGS_BASE_URL}/${getFilename(songInfo)}`
   });
 });
 
@@ -592,13 +615,14 @@ app.get('/metadata/:playlist', (req, res) => {
   songList.forEach(songId => {
     const songInfo = songsDb.songs[songId];
     if (songInfo) {
+      const filename = getFilename(songInfo);
       allDownloadResults.push({
         track_name: songInfo.metadata?.track_name,
         artists: songInfo.metadata?.artists_string,
-        filename: songInfo.filename,
+        filename: filename,
         status: 'success',
         metadata: songInfo.metadata,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`
       });
     }
   });
@@ -643,14 +667,18 @@ app.get('/song-info/:playlist/:filename', (req, res) => {
   // Find song by filename
   let foundSong = null;
   Object.entries(songsDb.songs).forEach(([songId, songInfo]) => {
-    if (songInfo.filename === filename || songInfo.original_filename === filename) {
+    const currentFilename = getFilename(songInfo);
+    if (currentFilename === filename || 
+        songInfo.original_filename === filename ||
+        songInfo.filename === filename) {
       foundSong = songInfo;
     }
   });
   
   if (foundSong) {
+    const filename = getFilename(foundSong);
     res.json({
-      filename: foundSong.filename,
+      filename: filename,
       track_name: foundSong.metadata?.track_name,
       artists_string: foundSong.metadata?.artists_string,
       cover_art_url: foundSong.metadata?.cover_art_url,
@@ -658,7 +686,7 @@ app.get('/song-info/:playlist/:filename', (req, res) => {
       album_name: foundSong.metadata?.album_name,
       duration_formatted: foundSong.metadata?.duration_formatted,
       playcount: foundSong.metadata?.playcount,
-      github_url: `${GITHUB_SONGS_BASE_URL}/${foundSong.filename}`
+      github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`
     });
   } else {
     res.json({ 
@@ -792,7 +820,7 @@ app.get('/search/advanced', (req, res) => {
     const trackName = (songInfo.metadata?.track_name || '').toLowerCase();
     const artistsString = (songInfo.metadata?.artists_string || '').toLowerCase();
     const albumName = (songInfo.metadata?.album_name || '').toLowerCase();
-    const filename = (songInfo.filename || '').toLowerCase();
+    const filename = (getFilename(songInfo) || '').toLowerCase();
     
     let matches = false;
     let relevanceScore = 0;
@@ -833,9 +861,10 @@ app.get('/search/advanced', (req, res) => {
     }
     
     if (matches) {
+      const actualFilename = getFilename(songInfo);
       allResults.push({
         song_id: songId,
-        filename: songInfo.filename,
+        filename: actualFilename,
         track_name: songInfo.metadata?.track_name || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         album_name: songInfo.metadata?.album_name,
@@ -844,7 +873,7 @@ app.get('/search/advanced', (req, res) => {
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${actualFilename}`,
         relevance_score: relevanceScore
       });
     }
@@ -1022,9 +1051,10 @@ app.get('/search/by-field', (req, res) => {
     }
     
     if (matches) {
+      const filename = getFilename(songInfo);
       allResults.push({
         song_id: songId,
-        filename: songInfo.filename,
+        filename: filename,
         track_name: songInfo.metadata?.track_name || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         album_name: songInfo.metadata?.album_name,
@@ -1033,7 +1063,7 @@ app.get('/search/by-field', (req, res) => {
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`,
         matched_field: field,
         matched_value: fieldValue
       });
@@ -1156,9 +1186,10 @@ app.get('/search/multi', (req, res) => {
     }
     
     if (matches) {
+      const filename = getFilename(songInfo);
       allResults.push({
         song_id: songId,
-        filename: songInfo.filename,
+        filename: filename,
         track_name: songInfo.metadata?.track_name || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         album_name: songInfo.metadata?.album_name,
@@ -1167,7 +1198,7 @@ app.get('/search/multi', (req, res) => {
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${filename}`,
         match_score: matchScore
       });
     }
@@ -1216,7 +1247,7 @@ app.get('/search', (req, res) => {
     const trackName = (songInfo.metadata?.track_name || '').toLowerCase();
     const artistsString = (songInfo.metadata?.artists_string || '').toLowerCase();
     const albumName = (songInfo.metadata?.album_name || '').toLowerCase();
-    const filename = (songInfo.filename || '').toLowerCase();
+    const filename = (getFilename(songInfo) || '').toLowerCase();
     
     // Check if all query terms match in any field
     const allFieldsText = `${trackName} ${artistsString} ${albumName} ${filename}`;
@@ -1233,9 +1264,10 @@ app.get('/search', (req, res) => {
         if (filename.includes(term)) relevanceScore += 2;
       });
       
+      const actualFilename = getFilename(songInfo);
       allResults.push({
         song_id: songId,
-        filename: songInfo.filename,
+        filename: actualFilename,
         track_name: songInfo.metadata?.track_name || 'Unknown',
         artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
         album_name: songInfo.metadata?.album_name,
@@ -1244,7 +1276,7 @@ app.get('/search', (req, res) => {
         cover_art_url: songInfo.metadata?.cover_art_url,
         cover_art_filename: songInfo.metadata?.cover_art_filename,
         playlists: songInfo.playlists,
-        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${actualFilename}`,
         relevance_score: relevanceScore
       });
     }
