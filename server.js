@@ -54,6 +54,30 @@ function loadCachedData() {
   return { songsDb: songsCache, playlistsDb: playlistsCache };
 }
 
+// Helper function to find playlist by ID or name
+function findPlaylistByIdOrName(playlistsDb, identifier) {
+  // First try to find by exact ID
+  if (playlistsDb.playlists[identifier]) {
+    return {
+      id: identifier,
+      data: playlistsDb.playlists[identifier]
+    };
+  }
+  
+  // If not found by ID, search by name (case-insensitive)
+  const lowerIdentifier = identifier.toLowerCase();
+  for (const [playlistId, playlistData] of Object.entries(playlistsDb.playlists)) {
+    if (playlistData.name && playlistData.name.toLowerCase() === lowerIdentifier) {
+      return {
+        id: playlistId,
+        data: playlistData
+      };
+    }
+  }
+  
+  return null;
+}
+
 // Pagination helper
 function paginateArray(array, page = 1, limit = 30) {
   const offset = (page - 1) * limit;
@@ -81,17 +105,22 @@ app.get('/playlists', (req, res) => {
   }
   
   const playlists = {};
-  Object.entries(playlistsDb.playlists).forEach(([playlistName, playlistInfo]) => {
+  Object.entries(playlistsDb.playlists).forEach(([playlistId, playlistInfo]) => {
     // Handle both 'songs' and 'song_ids' properties
     const songList = playlistInfo.songs || playlistInfo.song_ids || [];
     
-    playlists[playlistName] = {
-      name: playlistName,
+    playlists[playlistId] = {
+      id: playlistId,
+      name: playlistInfo.name || playlistId, // Use display name
+      display_name: playlistInfo.name || playlistId,
+      description: playlistInfo.description,
       total_tracks: playlistInfo.total_tracks,
       successful_downloads: playlistInfo.successful_downloads,
       unique_song_count: playlistInfo.unique_song_count,
       source_url: playlistInfo.source_url,
       timestamp: playlistInfo.timestamp,
+      created_at: playlistInfo.created_at,
+      last_updated: playlistInfo.last_updated,
       // Don't include songs array here to keep response lightweight
       has_songs: songList.length > 0
     };
@@ -138,7 +167,7 @@ app.get('/all-songs', (req, res) => {
 
 // API: Get paginated songs for a specific playlist
 app.get('/playlist/:playlist/songs', (req, res) => {
-  const playlistName = req.params.playlist;
+  const playlistIdentifier = req.params.playlist;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 30;
   
@@ -148,11 +177,16 @@ app.get('/playlist/:playlist/songs', (req, res) => {
     return res.status(500).json({ error: 'Unable to load database files' });
   }
   
-  const playlist = playlistsDb.playlists[playlistName];
-  if (!playlist) {
-    return res.status(404).json({ error: 'Playlist not found' });
+  const playlistResult = findPlaylistByIdOrName(playlistsDb, playlistIdentifier);
+  if (!playlistResult) {
+    return res.status(404).json({ 
+      error: 'Playlist not found',
+      searched_for: playlistIdentifier,
+      hint: 'Try searching by playlist ID or exact display name'
+    });
   }
   
+  const { id: playlistId, data: playlist } = playlistResult;
   const allSongsWithMetadata = [];
   
   // Handle both 'songs' and 'song_ids' properties
@@ -179,10 +213,13 @@ app.get('/playlist/:playlist/songs', (req, res) => {
   
   const result = paginateArray(allSongsWithMetadata, page, limit);
   
-  console.log(`Playlist ${playlistName} - Page ${page}: ${result.data.length}/${allSongsWithMetadata.length} songs`);
+  console.log(`Playlist "${playlist.name || playlistId}" (${playlistId}) - Page ${page}: ${result.data.length}/${allSongsWithMetadata.length} songs`);
   
   res.json({
-    playlist: playlistName,
+    playlist_id: playlistId,
+    playlist_name: playlist.name || playlistId,
+    display_name: playlist.name || playlistId,
+    description: playlist.description,
     songs: result.data,
     total_songs: allSongsWithMetadata.length,
     unique_songs: playlist.unique_song_count,
@@ -262,7 +299,7 @@ app.get('/random-song-ids', (req, res) => {
 
 // API: Shuffle play - Get current song and next 5 songs for shuffle
 app.get('/shuffle-play', (req, res) => {
-  const playlistName = req.query.playlist; // Optional - if not provided, shuffle from all songs
+  const playlistIdentifier = req.query.playlist; // Optional - if not provided, shuffle from all songs
   const exclude = req.query.exclude ? req.query.exclude.split(',') : [];
   
   const { songsDb, playlistsDb } = loadCachedData();
@@ -272,17 +309,29 @@ app.get('/shuffle-play', (req, res) => {
   }
   
   let availableSongIds = [];
+  let playlistInfo = null;
   
-  if (playlistName) {
+  if (playlistIdentifier) {
     // Shuffle from specific playlist
     if (!playlistsDb) {
       return res.status(500).json({ error: 'Unable to load playlists database' });
     }
     
-    const playlist = playlistsDb.playlists[playlistName];
-    if (!playlist) {
-      return res.status(404).json({ error: 'Playlist not found' });
+    const playlistResult = findPlaylistByIdOrName(playlistsDb, playlistIdentifier);
+    if (!playlistResult) {
+      return res.status(404).json({ 
+        error: 'Playlist not found', 
+        searched_for: playlistIdentifier,
+        hint: 'Try searching by playlist ID or exact display name'
+      });
     }
+    
+    const { id: playlistId, data: playlist } = playlistResult;
+    playlistInfo = {
+      id: playlistId,
+      name: playlist.name || playlistId,
+      display_name: playlist.name || playlistId
+    };
     
     // Handle both 'songs' and 'song_ids' properties
     const songList = playlist.songs || playlist.song_ids || [];
@@ -297,7 +346,7 @@ app.get('/shuffle-play', (req, res) => {
       error: 'No songs available for shuffle',
       current_song: null,
       next_songs: [],
-      playlist: playlistName || 'all',
+      playlist_info: playlistInfo || { name: 'all', display_name: 'All Songs' },
       total_available: 0
     });
   }
@@ -344,11 +393,11 @@ app.get('/shuffle-play', (req, res) => {
     github_url: `${GITHUB_SONGS_BASE_URL}/${currentSongInfo.filename}`
   } : null;
   
-  console.log(`Shuffle play ${playlistName ? `for playlist "${playlistName}"` : 'from all songs'}: Current song + ${nextSongs.length} next songs`);
+  console.log(`Shuffle play ${playlistInfo ? `for playlist "${playlistInfo.display_name}" (${playlistInfo.id})` : 'from all songs'}: Current song + ${nextSongs.length} next songs`);
   
   res.json({
     shuffle_info: {
-      playlist: playlistName || 'all',
+      playlist_info: playlistInfo || { name: 'all', display_name: 'All Songs' },
       total_available: availableSongIds.length,
       excluded_count: exclude.length,
       timestamp: Date.now()
@@ -360,6 +409,75 @@ app.get('/shuffle-play', (req, res) => {
       next_count: nextSongs.length,
       total_in_queue: nextSongs.length + 1
     }
+  });
+});
+
+// API: Search playlists by name
+app.get('/search/playlists', (req, res) => {
+  const query = req.query.q?.toLowerCase() || '';
+  const { playlistsDb } = loadCachedData();
+  
+  if (!playlistsDb) {
+    return res.status(500).json({ error: 'Unable to load playlists database' });
+  }
+  
+  if (!query) {
+    return res.json({ 
+      query: req.query.q || '',
+      results: [],
+      total_results: 0
+    });
+  }
+  
+  const results = [];
+  
+  Object.entries(playlistsDb.playlists).forEach(([playlistId, playlistInfo]) => {
+    const name = (playlistInfo.name || '').toLowerCase();
+    const description = (playlistInfo.description || '').toLowerCase();
+    
+    if (name.includes(query) || description.includes(query) || playlistId.toLowerCase().includes(query)) {
+      const songList = playlistInfo.songs || playlistInfo.song_ids || [];
+      
+      results.push({
+        id: playlistId,
+        name: playlistInfo.name || playlistId,
+        display_name: playlistInfo.name || playlistId,
+        description: playlistInfo.description,
+        total_tracks: playlistInfo.total_tracks,
+        unique_song_count: playlistInfo.unique_song_count,
+        has_songs: songList.length > 0,
+        created_at: playlistInfo.created_at,
+        last_updated: playlistInfo.last_updated
+      });
+    }
+  });
+  
+  // Sort by relevance (exact name matches first, then partial matches)
+  results.sort((a, b) => {
+    const aName = (a.name || '').toLowerCase();
+    const bName = (b.name || '').toLowerCase();
+    
+    const aExact = aName === query;
+    const bExact = bName === query;
+    
+    if (aExact && !bExact) return -1;
+    if (!aExact && bExact) return 1;
+    
+    const aStarts = aName.startsWith(query);
+    const bStarts = bName.startsWith(query);
+    
+    if (aStarts && !bStarts) return -1;
+    if (!aStarts && bStarts) return 1;
+    
+    return aName.localeCompare(bName);
+  });
+  
+  console.log(`Playlist search "${query}": ${results.length} results`);
+  
+  res.json({
+    query: req.query.q,
+    results: results,
+    total_results: results.length
   });
 });
 
@@ -444,7 +562,7 @@ app.get('/song/:songId', (req, res) => {
 
 // API: Get metadata for a specific playlist (backwards compatibility)
 app.get('/metadata/:playlist', (req, res) => {
-  const playlistName = req.params.playlist;
+  const playlistIdentifier = req.params.playlist;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 30;
   
@@ -454,10 +572,16 @@ app.get('/metadata/:playlist', (req, res) => {
     return res.status(500).json({ error: 'Unable to load database files' });
   }
   
-  const playlist = playlistsDb.playlists[playlistName];
-  if (!playlist) {
-    return res.status(404).json({ error: 'Playlist not found' });
+  const playlistResult = findPlaylistByIdOrName(playlistsDb, playlistIdentifier);
+  if (!playlistResult) {
+    return res.status(404).json({ 
+      error: 'Playlist not found',
+      searched_for: playlistIdentifier,
+      hint: 'Try searching by playlist ID or exact display name'
+    });
   }
+  
+  const { id: playlistId, data: playlist } = playlistResult;
   
   // Build download_results format for backwards compatibility
   const allDownloadResults = [];
@@ -481,14 +605,20 @@ app.get('/metadata/:playlist', (req, res) => {
   
   const result = paginateArray(allDownloadResults, page, limit);
   
-  console.log(`Metadata for ${playlistName} - Page ${page}: ${result.data.length}/${allDownloadResults.length} tracks`);
+  console.log(`Metadata for "${playlist.name || playlistId}" (${playlistId}) - Page ${page}: ${result.data.length}/${allDownloadResults.length} tracks`);
   
   res.json({
+    playlist_id: playlistId,
+    playlist_name: playlist.name || playlistId,
+    display_name: playlist.name || playlistId,
+    description: playlist.description,
     download_info: {
       total_tracks: playlist.total_tracks,
       successful_downloads: playlist.successful_downloads,
       source_url: playlist.source_url,
-      timestamp: playlist.timestamp
+      timestamp: playlist.timestamp,
+      created_at: playlist.created_at,
+      last_updated: playlist.last_updated
     },
     download_results: result.data,
     pagination: result.pagination
@@ -1169,6 +1299,12 @@ app.listen(PORT, () => {
   console.log('- GET /playlist/:playlist/songs?page=1&limit=30 - Paginated playlist songs');
   console.log('- GET /search?q=query&page=1&limit=30 - Paginated search results');
   console.log('- GET /metadata/:playlist?page=1&limit=30 - Paginated metadata');
+  console.log('');
+  console.log('New Enhanced Features:');
+  console.log('- 🎵 Search playlists by name: GET /search/playlists?q=name');
+  console.log('- 🔍 Access playlists by display name OR ID');
+  console.log('- 📋 Response includes both playlist ID and display name');
+  console.log('- 🎯 User-friendly playlist names in all responses');
   console.log('');
   console.log('Shuffle Optimization:');
   console.log('- GET /random-song-ids?count=50&exclude=id1,id2 - Get random song IDs');
