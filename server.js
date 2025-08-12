@@ -82,6 +82,9 @@ app.get('/playlists', (req, res) => {
   
   const playlists = {};
   Object.entries(playlistsDb.playlists).forEach(([playlistName, playlistInfo]) => {
+    // Handle both 'songs' and 'song_ids' properties
+    const songList = playlistInfo.songs || playlistInfo.song_ids || [];
+    
     playlists[playlistName] = {
       name: playlistName,
       total_tracks: playlistInfo.total_tracks,
@@ -90,7 +93,7 @@ app.get('/playlists', (req, res) => {
       source_url: playlistInfo.source_url,
       timestamp: playlistInfo.timestamp,
       // Don't include songs array here to keep response lightweight
-      has_songs: playlistInfo.songs && playlistInfo.songs.length > 0
+      has_songs: songList.length > 0
     };
   });
   
@@ -152,26 +155,27 @@ app.get('/playlist/:playlist/songs', (req, res) => {
   
   const allSongsWithMetadata = [];
   
-  if (playlist.songs) {
-    playlist.songs.forEach(songId => {
-      const songInfo = songsDb.songs[songId];
-      if (songInfo) {
-        allSongsWithMetadata.push({
-          song_id: songId,
-          filename: songInfo.filename,
-          track_name: songInfo.metadata?.track_name || songInfo.filename.replace(/\.[^/.]+$/, ""),
-          artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
-          cover_art_url: songInfo.metadata?.cover_art_url,
-          cover_art_filename: songInfo.metadata?.cover_art_filename,
-          album_name: songInfo.metadata?.album_name,
-          duration_formatted: songInfo.metadata?.duration_formatted,
-          playcount: songInfo.metadata?.playcount,
-          playlists: songInfo.playlists,
-          github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
-        });
-      }
-    });
-  }
+  // Handle both 'songs' and 'song_ids' properties
+  const songList = playlist.songs || playlist.song_ids || [];
+  
+  songList.forEach(songId => {
+    const songInfo = songsDb.songs[songId];
+    if (songInfo) {
+      allSongsWithMetadata.push({
+        song_id: songId,
+        filename: songInfo.filename,
+        track_name: songInfo.metadata?.track_name || songInfo.filename.replace(/\.[^/.]+$/, ""),
+        artists_string: songInfo.metadata?.artists_string || 'Unknown Artist',
+        cover_art_url: songInfo.metadata?.cover_art_url,
+        cover_art_filename: songInfo.metadata?.cover_art_filename,
+        album_name: songInfo.metadata?.album_name,
+        duration_formatted: songInfo.metadata?.duration_formatted,
+        playcount: songInfo.metadata?.playcount,
+        playlists: songInfo.playlists,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+      });
+    }
+  });
   
   const result = paginateArray(allSongsWithMetadata, page, limit);
   
@@ -280,7 +284,9 @@ app.get('/shuffle-play', (req, res) => {
       return res.status(404).json({ error: 'Playlist not found' });
     }
     
-    availableSongIds = playlist.songs ? playlist.songs.filter(id => !exclude.includes(id)) : [];
+    // Handle both 'songs' and 'song_ids' properties
+    const songList = playlist.songs || playlist.song_ids || [];
+    availableSongIds = songList.filter(id => !exclude.includes(id));
   } else {
     // Shuffle from all songs
     availableSongIds = Object.keys(songsDb.songs).filter(id => !exclude.includes(id));
@@ -456,21 +462,22 @@ app.get('/metadata/:playlist', (req, res) => {
   // Build download_results format for backwards compatibility
   const allDownloadResults = [];
   
-  if (playlist.songs) {
-    playlist.songs.forEach(songId => {
-      const songInfo = songsDb.songs[songId];
-      if (songInfo) {
-        allDownloadResults.push({
-          track_name: songInfo.metadata?.track_name,
-          artists: songInfo.metadata?.artists_string,
-          filename: songInfo.filename,
-          status: 'success',
-          metadata: songInfo.metadata,
-          github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
-        });
-      }
-    });
-  }
+  // Handle both 'songs' and 'song_ids' properties
+  const songList = playlist.songs || playlist.song_ids || [];
+  
+  songList.forEach(songId => {
+    const songInfo = songsDb.songs[songId];
+    if (songInfo) {
+      allDownloadResults.push({
+        track_name: songInfo.metadata?.track_name,
+        artists: songInfo.metadata?.artists_string,
+        filename: songInfo.filename,
+        status: 'success',
+        metadata: songInfo.metadata,
+        github_url: `${GITHUB_SONGS_BASE_URL}/${songInfo.filename}`
+      });
+    }
+  });
   
   const result = paginateArray(allDownloadResults, page, limit);
   
