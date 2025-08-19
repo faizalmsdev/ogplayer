@@ -1314,7 +1314,7 @@ app.get('/ping', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log('='.repeat(50));
   console.log('OPTIMIZED MUSIC SERVER (Pagination + Caching)');
