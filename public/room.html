@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Sync Music Player</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .room-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .room-section {
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .room-section h3 {
+            margin-bottom: 15px;
+            color: #5a6c7d;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .player-section {
+            margin-top: 20px;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .ntp-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .ntp-info h4 {
+            margin-bottom: 10px;
+            color: #0066cc;
+        }
+
+        .ntp-info .time-display {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .song-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .playlist-section {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .song-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .song-item:hover {
+            background: #f0f0f0;
+        }
+
+        .song-item:last-child {
+            border-bottom: none;
+        }
+
+        .log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .room-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .player-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Room Sync Music Player</h1>
+            <p>Synchronized music playback with NTP timing</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="connectionStatus" class="status disconnected">
+            ❌ Disconnected from server
+        </div>
+
+        <!-- Room Controls -->
+        <div class="card">
+            <div class="room-controls">
+                <div class="room-section">
+                    <h3>🚪 Create Room</h3>
+                    <div class="form-group">
+                        <label for="createRoomName">Room Name</label>
+                        <input type="text" id="createRoomName" placeholder="Enter room name">
+                    </div>
+                    <button class="btn btn-primary" onclick="createRoom()">Create & Join as Admin</button>
+                </div>
+
+                <div class="room-section">
+                    <h3>🔗 Join Room</h3>
+                    <div class="form-group">
+                        <label for="joinRoomName">Room Name</label>
+                        <input type="text" id="joinRoomName" placeholder="Enter room name">
+                    </div>
+                    <button class="btn btn-secondary" onclick="joinRoom()">Join as Listener</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NTP Synchronization Info -->
+        <div class="card">
+            <div class="ntp-info">
+                <h4>⏰ Time Synchronization</h4>
+                <div class="time-display">
+                    <div>Server Time: <span id="serverTime">--:--:--</span></div>
+                    <div>Local Time: <span id="localTime">--:--:--</span></div>
+                    <div>Offset: <span id="timeOffset">0ms</span></div>
+                    <div>Last Sync: <span id="lastSync">Never</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Section -->
+        <div class="card">
+            <div class="player-section">
+                <h3>🎶 Music Player</h3>
+                
+                <div class="player-controls">
+                    <button class="btn btn-primary" onclick="loadPlaylist()" id="loadPlaylistBtn">Load Playlist</button>
+                    <button class="btn btn-primary" onclick="shufflePlay()" id="shuffleBtn" disabled>Shuffle Play</button>
+                    <button class="btn btn-secondary" onclick="syncTime()" id="syncBtn">Sync Time</button>
+                    <select id="playlistSelect">
+                        <option value="">Select Playlist...</option>
+                    </select>
+                </div>
+
+                <div class="song-info" id="currentSongInfo" style="display:none;">
+                    <strong>Now Playing:</strong>
+                    <div id="songDetails">No song selected</div>
+                </div>
+
+                <audio id="audioPlayer" class="audio-player" controls>
+                    Your browser does not support the audio element.
+                </audio>
+
+                <div class="playlist-section" id="playlistSongs" style="display:none;">
+                    <h4>Playlist Songs:</h4>
+                    <div id="songsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="card">
+            <h3>📋 Activity Log</h3>
+            <div id="activityLog" class="log">
+                <div>🔌 Connecting to server...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let socket = null;
+        let currentRoom = null;
+        let isAdmin = false;
+        let timeOffset = 0;
+        let playlists = {};
+        let currentPlaylist = [];
+        let ntpSyncInterval = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSocket();
+            updateTimeDisplay();
+            loadPlaylists();
+            
+            // Update time display every second
+            setInterval(updateTimeDisplay, 1000);
+            
+            // Sync time every 30 seconds
+            ntpSyncInterval = setInterval(syncTime, 30000);
+        });
+
+        function initializeSocket() {
+            // Connect to your server (change URL as needed)
+            socket = io('http://localhost:3000');
+
+            socket.on('connect', function() {
+                log('✅ Connected to server');
+                updateConnectionStatus(true);
+                syncTime(); // Initial time sync
+            });
+
+            socket.on('disconnect', function() {
+                log('❌ Disconnected from server');
+                updateConnectionStatus(false);
+                currentRoom = null;
+            });
+
+            socket.on('play_song', function(data) {
+                handlePlaySongEvent(data);
+            });
+
+            // Handle late joiner sync
+            socket.on('sync_to_current', function(data) {
+                log(`🔄 Syncing to current song: ${data.url}`);
+                const audio = document.getElementById('audioPlayer');
+                audio.src = data.url;
+                // Seek to the correct position
+                audio.currentTime = data.seekTo || 0;
+                audio.play().then(() => {
+                    log(`▶️ Synced playback at ${data.seekTo ? data.seekTo.toFixed(2) : 0}s`);
+                }).catch(err => {
+                    log(`❌ Sync playback failed: ${err.message}`);
+                });
+                // Update song info if available
+                if (data.songInfo) {
+                    updateSongInfo(data.songInfo);
+                }
+            });
+
+            socket.on('error', function(error) {
+                log(`❌ Socket error: ${error}`);
+            });
+        }
+
+        // Extracted play_song logic for reuse
+        function handlePlaySongEvent(data) {
+            log(`🎵 Received play command: ${data.url}`);
+            log(`⏰ Start at: ${data.startAt}ms from now`);
+            const audio = document.getElementById('audioPlayer');
+            audio.src = data.url;
+            // Calculate exact start time using NTP synchronization
+            const currentTime = Date.now() + timeOffset;
+            const startTime = data.startAt;
+            const delay = startTime - currentTime;
+            if (delay > 0) {
+                log(`⏱️ Waiting ${delay}ms to start playback`);
+                setTimeout(() => {
+                    audio.play().then(() => {
+                        log('▶️ Playback started (synchronized)');
+                    }).catch(err => {
+                        log(`❌ Playback failed: ${err.message}`);
+                    });
+                }, delay);
+            } else {
+                // If we're late, start immediately but seek to correct position
+                const seekTo = Math.abs(delay) / 1000;
+                log(`⏭️ Starting late, seeking to ${seekTo}s`);
+                audio.currentTime = seekTo;
+                audio.play().then(() => {
+                    log('▶️ Playback started (late sync)');
+                }).catch(err => {
+                    log(`❌ Playback failed: ${err.message}`);
+                });
+            }
+            // Update song info if available
+            if (data.songInfo) {
+                updateSongInfo(data.songInfo);
+            }
+        }
+
+        function createRoom() {
+            const roomName = document.getElementById('createRoomName').value.trim();
+            if (!roomName) {
+                alert('Please enter a room name');
+                return;
+            }
+
+            currentRoom = roomName;
+            isAdmin = true;
+            
+            socket.emit('join_room', { room: roomName, isAdmin: true });
+            log(`🏠 Created and joined room: ${roomName} (Admin)`);
+            
+            // Enable admin controls
+            document.getElementById('shuffleBtn').disabled = false;
+        }
+
+        function joinRoom() {
+            const roomName = document.getElementById('joinRoomName').value.trim();
+            if (!roomName) {
+                alert('Please enter a room name');
+                return;
+            }
+
+            currentRoom = roomName;
+            isAdmin = false;
+            
+            socket.emit('join_room', { room: roomName, isAdmin: false });
+            log(`🔗 Joined room: ${roomName} (Listener)`);
+            
+            // Disable admin controls
+            document.getElementById('shuffleBtn').disabled = true;
+        }
+
+        async function loadPlaylists() {
+            try {
+                const response = await fetch('/playlists');
+                const data = await response.json();
+                playlists = data;
+                
+                const select = document.getElementById('playlistSelect');
+                select.innerHTML = '<option value="">Select Playlist...</option>';
+                
+                Object.values(data).forEach(playlist => {
+                    const option = document.createElement('option');
+                    option.value = playlist.id;
+                    option.textContent = `${playlist.display_name} (${playlist.has_songs ? 'Ready' : 'Empty'})`;
+                    select.appendChild(option);
+                });
+                
+                log(`📋 Loaded ${Object.keys(data).length} playlists`);
+            } catch (error) {
+                log(`❌ Failed to load playlists: ${error.message}`);
+            }
+        }
+
+        async function loadPlaylist() {
+            const playlistId = document.getElementById('playlistSelect').value;
+            if (!playlistId) {
+                alert('Please select a playlist');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/playlist/${playlistId}/songs?limit=50`);
+                const data = await response.json();
+                currentPlaylist = data.songs || [];
+                
+                displayPlaylistSongs(data);
+                log(`🎵 Loaded playlist: ${data.display_name} (${currentPlaylist.length} songs)`);
+                
+            } catch (error) {
+                log(`❌ Failed to load playlist: ${error.message}`);
+            }
+        }
+
+        function displayPlaylistSongs(playlistData) {
+            const songsContainer = document.getElementById('songsList');
+            const playlistSection = document.getElementById('playlistSongs');
+            
+            songsContainer.innerHTML = '';
+            
+            if (currentPlaylist.length > 0) {
+                currentPlaylist.forEach((song, index) => {
+                    const songDiv = document.createElement('div');
+                    songDiv.className = 'song-item';
+                    songDiv.innerHTML = `
+                        <strong>${song.track_name}</strong><br>
+                        <small>${song.artists_string} • ${song.duration_formatted || 'Unknown duration'}</small>
+                    `;
+                    songDiv.onclick = () => selectSong(song, index);
+                    songsContainer.appendChild(songDiv);
+                });
+                
+                playlistSection.style.display = 'block';
+            } else {
+                playlistSection.style.display = 'none';
+            }
+        }
+
+        function selectSong(song, index) {
+            if (!isAdmin || !currentRoom) {
+                alert('Only room admin can control playback');
+                return;
+            }
+
+            playSongInRoom(song.github_url, song);
+        }
+
+        async function shufflePlay() {
+            if (!isAdmin || !currentRoom) {
+                alert('Only room admin can control playback');
+                return;
+            }
+
+            const playlistId = document.getElementById('playlistSelect').value;
+            
+            try {
+                const url = playlistId ? 
+                    `/shuffle-play?playlist=${playlistId}` : 
+                    '/shuffle-play';
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.current_song) {
+                    playSongInRoom(data.current_song.github_url, data.current_song);
+                    log(`🎲 Shuffle: ${data.current_song.track_name} by ${data.current_song.artists_string}`);
+                } else {
+                    log('❌ No songs available for shuffle');
+                }
+                
+            } catch (error) {
+                log(`❌ Shuffle failed: ${error.message}`);
+            }
+        }
+
+        function playSongInRoom(url, songInfo) {
+            if (!currentRoom || !isAdmin) {
+                log('❌ Cannot play: Not admin or not in room');
+                return;
+            }
+
+            // Calculate start time (2 seconds from now) with NTP offset
+            const startAt = Date.now() + timeOffset + 2000;
+            
+            // Emit to room
+            socket.emit('play_song', { 
+                room: currentRoom, 
+                url: url,
+                startAt: startAt
+            });
+
+            // Update song info display
+            updateSongInfo(songInfo);
+            
+            log(`🎵 Broadcasting to room: ${songInfo.track_name}`);
+            log(`⏰ Scheduled start: ${new Date(startAt).toLocaleTimeString()}`);
+        }
+
+        function updateSongInfo(song) {
+            const songInfoDiv = document.getElementById('currentSongInfo');
+            const songDetails = document.getElementById('songDetails');
+            
+            if (song) {
+                songDetails.innerHTML = `
+                    <strong>${song.track_name}</strong><br>
+                    <small>by ${song.artists_string}</small>
+                    ${song.album_name ? `<br><small>Album: ${song.album_name}</small>` : ''}
+                `;
+                songInfoDiv.style.display = 'block';
+            } else {
+                songInfoDiv.style.display = 'none';
+            }
+        }
+
+        async function syncTime() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/ping');
+                const endTime = Date.now();
+                const data = await response.json();
+                
+                // Simple NTP-like calculation
+                const roundTripTime = endTime - startTime;
+                const serverTime = new Date(data.timestamp).getTime();
+                const networkDelay = roundTripTime / 2;
+                const estimatedServerTime = serverTime + networkDelay;
+                
+                timeOffset = estimatedServerTime - Date.now();
+                
+                document.getElementById('timeOffset').textContent = `${Math.round(timeOffset)}ms`;
+                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+                
+                log(`🕐 Time synced: offset ${Math.round(timeOffset)}ms (RTT: ${roundTripTime}ms)`);
+                
+            } catch (error) {
+                log(`❌ Time sync failed: ${error.message}`);
+            }
+        }
+
+        function updateTimeDisplay() {
+            const now = new Date();
+            const serverTime = new Date(now.getTime() + timeOffset);
+            
+            document.getElementById('localTime').textContent = now.toLocaleTimeString();
+            document.getElementById('serverTime').textContent = serverTime.toLocaleTimeString();
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.className = 'status connected';
+                status.innerHTML = '✅ Connected to server';
+            } else {
+                status.className = 'status disconnected';
+                status.innerHTML = '❌ Disconnected from server';
+            }
+        }
+
+        function log(message) {
+            const logDiv = document.getElementById('activityLog');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${time}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // Keep only last 50 entries
+            while (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.firstChild);
+            }
+        }
+
+        // Handle page visibility for better sync
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && socket && socket.connected) {
+                syncTime(); // Re-sync when page becomes visible
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (ntpSyncInterval) {
+                clearInterval(ntpSyncInterval);
+            }
+        });
+    </script>
+</body>
+</html>

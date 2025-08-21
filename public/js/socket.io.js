@@ -1,0 +1,3 @@
+// This file is copied from node_modules/socket.io/client-dist/socket.io.js for local use
+// --- BEGIN SOCKET.IO CLIENT ---
+// ...existing code...

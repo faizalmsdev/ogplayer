@@ -1,8 +1,12 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 const PORT = 3000;
 
 // Updated paths for consolidated structure
@@ -114,6 +118,95 @@ function paginateArray(array, page = 1, limit = 30) {
     }
   };
 }
+
+// --- ENHANCED SOCKET.IO ROOM SYNC FEATURE ---
+const rooms = {};
+
+io.on('connection', (socket) => {
+  console.log(`New connection: ${socket.id}`);
+
+  socket.on('join_room', ({ room, isAdmin }) => {
+    socket.join(room);
+    
+    // Initialize room if it doesn't exist
+    if (!rooms[room]) {
+      rooms[room] = { 
+        admin: null, 
+        users: new Set(),
+        currentSong: null,
+        startTime: null,
+        songDuration: null
+      };
+    }
+    
+    if (isAdmin) rooms[room].admin = socket.id;
+    rooms[room].users.add(socket.id);
+    socket.room = room;
+    socket.isAdmin = isAdmin;
+    
+    console.log(`User ${socket.id} joined room ${room} as ${isAdmin ? 'admin' : 'listener'}`);
+    
+    // If there's a song currently playing, sync the new user
+    if (rooms[room].currentSong && rooms[room].startTime) {
+      const currentTime = Date.now();
+      const elapsed = currentTime - rooms[room].startTime;
+      const songDuration = rooms[room].songDuration || 0;
+      
+      // Only sync if song is still playing (hasn't ended)
+      if (songDuration === 0 || elapsed < songDuration) {
+        console.log(`🔄 Syncing new user to ongoing song. Elapsed: ${elapsed}ms`);
+        
+        // Send sync command to just this user
+        socket.emit('sync_to_current', {
+          url: rooms[room].currentSong.url,
+          seekTo: Math.max(0, elapsed / 1000), // Convert to seconds
+          songInfo: rooms[room].currentSong.songInfo,
+          startTime: rooms[room].startTime
+        });
+      }
+    }
+  });
+
+  socket.on('play_song', ({ room, url, startAt, songInfo, duration }) => {
+    // Only admin can trigger
+    if (rooms[room] && rooms[room].admin === socket.id) {
+      console.log(`🎵 Admin ${socket.id} playing song in room ${room}: ${songInfo?.track_name || url}`);
+      
+      // Store current song info for new joiners
+      rooms[room].currentSong = { url, songInfo };
+      rooms[room].startTime = startAt;
+      rooms[room].songDuration = duration ? duration * 1000 : null; // Convert to ms
+      
+      io.to(room).emit('play_song', { url, startAt, songInfo });
+    }
+  });
+
+  socket.on('song_ended', ({ room }) => {
+    // Clear current song when it ends
+    if (rooms[room]) {
+      console.log(`🔚 Song ended in room ${room}`);
+      rooms[room].currentSong = null;
+      rooms[room].startTime = null;
+      rooms[room].songDuration = null;
+    }
+  });
+
+  socket.on('disconnect', () => {
+    const room = socket.room;
+    if (room && rooms[room]) {
+      rooms[room].users.delete(socket.id);
+      if (rooms[room].admin === socket.id) {
+        console.log(`👑 Admin left room ${room}`);
+        rooms[room].admin = null;
+      }
+      if (rooms[room].users.size === 0) {
+        console.log(`🗑️ Room ${room} is now empty, deleting`);
+        delete rooms[room];
+      }
+    }
+    console.log(`👋 User ${socket.id} disconnected`);
+  });
+});
 
 // API: Get all playlists with song counts (lightweight)
 app.get('/playlists', (req, res) => {
@@ -1314,11 +1407,10 @@ app.get('/ping', (req, res) => {
   });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log('='.repeat(50));
   console.log('OPTIMIZED MUSIC SERVER (Pagination + Caching)');
-  console.log('='.repeat(50));
   console.log('Performance Features:');
   console.log('- 🚀 Pagination (default: 30 items per page)');
   console.log('- 🔄 In-memory caching (5-minute TTL)');
@@ -1348,10 +1440,8 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log('- GET /song/:songId - Get individual song info');
   console.log('- GET /stats - Get database statistics (cached)');
   console.log('- GET /songs/:filename - Redirect to GitHub song URL');
-  
   // Initialize cache on startup
   loadCachedData();
-  
   const { songsDb, playlistsDb } = loadCachedData();
   if (songsDb && playlistsDb) {
     console.log('');
@@ -1367,4 +1457,5 @@ app.listen(PORT, "0.0.0.0", () => {
     console.log('   - Cache is auto-refreshed every 5 minutes');
     console.log('   - Use /random-song-ids for efficient shuffle');
   }
+  console.log('Socket.IO enabled for room sync!');
 });
