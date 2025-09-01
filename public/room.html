@@ -160,6 +160,57 @@
             align-items: center;
         }
 
+        .control-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            user-select: none;
+        }
+
+        .toggle-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 24px;
+            transition: background 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-label input[type="checkbox"]:checked + .toggle-slider {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .toggle-label input[type="checkbox"]:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
         .ntp-info {
             background: #e7f3ff;
             border: 1px solid #b3d9ff;
@@ -186,6 +237,39 @@
             width: 100%;
             margin: 20px 0;
             border-radius: 8px;
+        }
+
+        /* Hide audio controls for listeners */
+        .audio-player:not(.admin-controls)::-webkit-media-controls-panel {
+            display: none !important;
+        }
+
+        .audio-player:not(.admin-controls)::-webkit-media-controls {
+            display: none !important;
+        }
+
+        .audio-player:not(.admin-controls)::-moz-media-controls {
+            display: none !important;
+        }
+
+        .audio-player:not(.admin-controls) {
+            pointer-events: none;
+        }
+
+        /* Show controls for admins */
+        .audio-player.admin-controls {
+            pointer-events: auto;
+        }
+
+        .listener-notice {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            text-align: center;
+            color: #0066cc;
+            font-size: 0.9rem;
         }
 
         .song-info {
@@ -230,20 +314,210 @@
             margin-top: 20px;
         }
 
-        @media (max-width: 768px) {
-            .room-controls {
-                grid-template-columns: 1fr;
-            }
-            
-            .player-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .btn {
-                width: 100%;
-                margin-bottom: 10px;
-            }
+        .queue-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .queue-modal.show {
+            display: flex;
+        }
+
+        .queue-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .queue-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .current-song {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .current-song h4 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+        }
+
+        .queue-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .queue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            transition: background 0.2s;
+        }
+
+        .queue-item:hover {
+            background: #f0f0f0;
+        }
+
+        .queue-item.current {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .queue-item-info {
+            flex: 1;
+        }
+
+        .queue-item-info strong {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .queue-item-info small {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .queue-item.current .queue-item-info small {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .queue-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .queue-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .queue-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .queue-item.current .queue-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .queue-empty {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .queue-section {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            background: #f8f9fa;
+        }
+
+        .visible-queue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+
+        .visible-queue-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .visible-queue-item.current {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: 1px solid #667eea;
+        }
+
+        .visible-queue-item-info {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .visible-queue-item-info strong {
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .visible-queue-item-info small {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .visible-queue-item.current .visible-queue-item-info small {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .queue-position {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 20px;
         }
     </style>
 </head>
@@ -303,7 +577,16 @@
                 <div class="player-controls">
                     <button class="btn btn-primary" onclick="loadPlaylist()" id="loadPlaylistBtn">Load Playlist</button>
                     <button class="btn btn-primary" onclick="shufflePlay()" id="shuffleBtn" disabled>Shuffle Play</button>
+                    <button class="btn btn-secondary" onclick="skipToNext()" id="nextBtn" disabled>⏭️ Next</button>
+                    <button class="btn btn-secondary" onclick="showQueueModal()" id="showQueueBtn" disabled>Show Queue</button>
                     <button class="btn btn-secondary" onclick="syncTime()" id="syncBtn">Sync Time</button>
+                    <div class="control-toggle" id="controlToggle" style="display: none;">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="anyoneCanControl" onchange="toggleAnyoneCanControl()">
+                            <span class="toggle-slider"></span>
+                            Allow Anyone to Control
+                        </label>
+                    </div>
                     <select id="playlistSelect">
                         <option value="">Select Playlist...</option>
                     </select>
@@ -314,13 +597,26 @@
                     <div id="songDetails">No song selected</div>
                 </div>
 
-                <audio id="audioPlayer" class="audio-player" controls>
+                <audio id="audioPlayer" class="audio-player">
                     Your browser does not support the audio element.
                 </audio>
+                
+                <div id="listenerMessage" class="listener-notice" style="display: none;">
+                    <p>🎧 You are listening as a guest. Only the room admin can control playback.</p>
+                    <p id="controlModeMessage" style="display: none;">🎛️ Anyone can control mode is enabled - you can control playback!</p>
+                </div>
 
                 <div class="playlist-section" id="playlistSongs" style="display:none;">
                     <h4>Playlist Songs:</h4>
                     <div id="songsList"></div>
+                </div>
+
+                <!-- Visible Queue Section -->
+                <div class="queue-section" id="visibleQueueSection">
+                    <h4>🎵 Current Queue:</h4>
+                    <div id="visibleQueueList">
+                        <div class="queue-empty">Queue is empty. Add songs to get started!</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -334,6 +630,30 @@
         </div>
     </div>
 
+    <!-- Queue Modal -->
+    <div id="queueModal" class="queue-modal">
+        <div class="queue-content">
+            <div class="queue-header">
+                <h3>🎵 Music Queue</h3>
+                <button class="close-btn" onclick="closeQueueModal()">×</button>
+            </div>
+            
+            <div id="currentSongDisplay" class="current-song" style="display: none;">
+                <h4>Now Playing</h4>
+                <div id="currentSongDetails">No song playing</div>
+            </div>
+            
+            <div class="queue-list" id="queueList">
+                <div class="queue-empty">Queue is empty. Add songs to get started!</div>
+            </div>
+            
+            <div class="queue-controls">
+                <button class="btn btn-secondary" onclick="clearQueue()">Clear Queue</button>
+                <button class="btn btn-primary" onclick="closeQueueModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let socket = null;
@@ -343,6 +663,8 @@
         let playlists = {};
         let currentPlaylist = [];
         let ntpSyncInterval = null;
+        let isSeeking = false; // Flag to prevent seek loops
+        let anyoneCanControl = false; // Flag for anyone can control mode
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -359,12 +681,41 @@
 
         function initializeSocket() {
             // Connect to your server (change URL as needed)
-            socket = io('http://209.74.95.163:3000');
+            socket = io('http://localhost:3000');
 
             socket.on('connect', function() {
                 log('✅ Connected to server');
                 updateConnectionStatus(true);
                 syncTime(); // Initial time sync
+                
+                // Only update controls if user hasn't joined a room yet
+                if (!currentRoom) {
+                    updateUserControls();
+                }
+                
+                // Set up audio player event listeners
+                const audio = document.getElementById('audioPlayer');
+                audio.addEventListener('ended', function() {
+                    if (currentRoom) {
+                        socket.emit('song_ended', { room: currentRoom });
+                        log('🔚 Song ended, requesting next song');
+                    }
+                });
+
+                // Add seek event listener for seeking (admin or anyone if enabled)
+                audio.addEventListener('seeked', function() {
+                    if (currentRoom && (isAdmin || anyoneCanControl) && !isSeeking) {
+                        const seekTime = audio.currentTime;
+                        socket.emit('seek_song', { 
+                            room: currentRoom, 
+                            seekTime: seekTime 
+                        });
+                        log(`⏩ ${isAdmin ? 'Admin' : 'User'} seeked to ${seekTime.toFixed(2)}s`);
+                    } else if (!isAdmin && !anyoneCanControl && !isSeeking) {
+                        // If a listener somehow triggered seek in restricted mode, revert it
+                        log('🚫 Seek blocked for listener - reverting to synced position');
+                    }
+                });
             });
 
             socket.on('disconnect', function() {
@@ -377,17 +728,53 @@
                 handlePlaySongEvent(data);
             });
 
+            socket.on('queue_update', function(data) {
+                updateQueueDisplay(data.queue, data.currentSong);
+            });
+
+            socket.on('seek_song', function(data) {
+                log(`⏩ Received seek command: ${data.seekTime.toFixed(2)}s`);
+                const audio = document.getElementById('audioPlayer');
+                isSeeking = true;
+                audio.currentTime = data.seekTime;
+                // Reset the flag after a short delay to allow the seek to complete
+                setTimeout(() => { isSeeking = false; }, 100);
+            });
+
+            socket.on('admin_status', function(data) {
+                const wasAdmin = isAdmin;
+                isAdmin = data.isAdmin;
+                
+                if (wasAdmin !== isAdmin) {
+                    log(`${isAdmin ? '👑' : '🎧'} Admin status updated: ${isAdmin ? 'Admin' : 'Listener'}`);
+                    updateUserControls();
+                }
+            });
+
+            socket.on('toggle_anyone_can_control', function(data) {
+                anyoneCanControl = data.enabled;
+                const checkbox = document.getElementById('anyoneCanControl');
+                if (checkbox) {
+                    checkbox.checked = anyoneCanControl;
+                }
+                updateUserControls();
+                log(`${data.enabled ? '🔓' : '🔒'} Anyone can control mode: ${data.enabled ? 'ENABLED' : 'DISABLED'}`);
+            });
+
             // Handle late joiner sync
             socket.on('sync_to_current', function(data) {
                 log(`🔄 Syncing to current song: ${data.url}`);
                 const audio = document.getElementById('audioPlayer');
                 audio.src = data.url;
                 // Seek to the correct position
+                isSeeking = true;
                 audio.currentTime = data.seekTo || 0;
                 audio.play().then(() => {
                     log(`▶️ Synced playback at ${data.seekTo ? data.seekTo.toFixed(2) : 0}s`);
+                    setTimeout(() => { isSeeking = false; }, 100);
                 }).catch(err => {
                     log(`❌ Sync playback failed: ${err.message}`);
+                    isSeeking = false;
                 });
                 // Update song info if available
                 if (data.songInfo) {
@@ -423,11 +810,14 @@
                 // If we're late, start immediately but seek to correct position
                 const seekTo = Math.abs(delay) / 1000;
                 log(`⏭️ Starting late, seeking to ${seekTo}s`);
+                isSeeking = true;
                 audio.currentTime = seekTo;
                 audio.play().then(() => {
                     log('▶️ Playback started (late sync)');
+                    setTimeout(() => { isSeeking = false; }, 100);
                 }).catch(err => {
                     log(`❌ Playback failed: ${err.message}`);
+                    isSeeking = false;
                 });
             }
             // Update song info if available
@@ -444,13 +834,11 @@
             }
 
             currentRoom = roomName;
-            isAdmin = true;
-            
+            // Request admin status - server will confirm
             socket.emit('join_room', { room: roomName, isAdmin: true });
-            log(`🏠 Created and joined room: ${roomName} (Admin)`);
+            log(`🏠 Creating and joining room: ${roomName}`);
             
-            // Enable admin controls
-            document.getElementById('shuffleBtn').disabled = false;
+            // Don't set admin status locally - wait for server confirmation
         }
 
         function joinRoom() {
@@ -461,13 +849,20 @@
             }
 
             currentRoom = roomName;
-            isAdmin = false;
+            // Don't override admin status if already set
+            if (!isAdmin) {
+                isAdmin = false;
+            }
             
-            socket.emit('join_room', { room: roomName, isAdmin: false });
-            log(`🔗 Joined room: ${roomName} (Listener)`);
+            socket.emit('join_room', { room: roomName, isAdmin: isAdmin });
+            log(`🔗 Joined room: ${roomName} (${isAdmin ? 'Admin' : 'Listener'})`);
             
-            // Disable admin controls
-            document.getElementById('shuffleBtn').disabled = true;
+            // Update controls based on current status
+            if (isAdmin) {
+                enableAdminControls();
+            } else {
+                disableAdminControls();
+            }
         }
 
         async function loadPlaylists() {
@@ -542,7 +937,7 @@
                 return;
             }
 
-            playSongInRoom(song.github_url, song);
+            addSongToQueue(song.github_url, song);
         }
 
         async function shufflePlay() {
@@ -562,8 +957,8 @@
                 const data = await response.json();
                 
                 if (data.current_song) {
-                    playSongInRoom(data.current_song.github_url, data.current_song);
-                    log(`🎲 Shuffle: ${data.current_song.track_name} by ${data.current_song.artists_string}`);
+                    addSongToQueue(data.current_song.github_url, data.current_song);
+                    log(`🎲 Added shuffle song to queue: ${data.current_song.track_name} by ${data.current_song.artists_string}`);
                 } else {
                     log('❌ No songs available for shuffle');
                 }
@@ -571,6 +966,22 @@
             } catch (error) {
                 log(`❌ Shuffle failed: ${error.message}`);
             }
+        }
+
+        function addSongToQueue(url, songInfo) {
+            if (!currentRoom || !isAdmin) {
+                log('❌ Cannot add to queue: Not admin or not in room');
+                return;
+            }
+
+            // Emit add to queue event
+            socket.emit('add_to_queue', { 
+                room: currentRoom, 
+                url: url,
+                songInfo: songInfo
+            });
+
+            log(`➕ Added to queue: ${songInfo.track_name}`);
         }
 
         function playSongInRoom(url, songInfo) {
@@ -586,7 +997,8 @@
             socket.emit('play_song', { 
                 room: currentRoom, 
                 url: url,
-                startAt: startAt
+                startAt: startAt,
+                songInfo: songInfo
             });
 
             // Update song info display
@@ -594,6 +1006,208 @@
             
             log(`🎵 Broadcasting to room: ${songInfo.track_name}`);
             log(`⏰ Scheduled start: ${new Date(startAt).toLocaleTimeString()}`);
+        }
+
+        function removeFromQueue(index) {
+            if (!currentRoom || !isAdmin) {
+                log('❌ Cannot remove from queue: Not admin or not in room');
+                return;
+            }
+
+            socket.emit('remove_from_queue', { 
+                room: currentRoom, 
+                index: index
+            });
+
+            log(`➖ Removed song from queue at position ${index + 1}`);
+        }
+
+        function clearQueue() {
+            if (!currentRoom || !isAdmin) {
+                log('❌ Cannot clear queue: Not admin or not in room');
+                return;
+            }
+
+            socket.emit('clear_queue', { 
+                room: currentRoom
+            });
+
+            log('🗑️ Cleared queue');
+        }
+
+        function enableAdminControls() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const listenerMessage = document.getElementById('listenerMessage');
+            const controlToggle = document.getElementById('controlToggle');
+            
+            // Enable admin buttons
+            document.getElementById('shuffleBtn').disabled = false;
+            document.getElementById('showQueueBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = false;
+            
+            // Show control toggle for admin
+            controlToggle.style.display = 'flex';
+            
+            // Enable audio controls for admin
+            audioPlayer.classList.add('admin-controls');
+            audioPlayer.controls = true;
+            
+            // Hide listener message
+            if (listenerMessage) {
+                listenerMessage.style.display = 'none';
+            }
+            
+            log('👑 Admin controls enabled');
+        }
+
+        function disableAdminControls() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const listenerMessage = document.getElementById('listenerMessage');
+            const controlToggle = document.getElementById('controlToggle');
+            
+            // Disable admin buttons
+            document.getElementById('shuffleBtn').disabled = true;
+            document.getElementById('showQueueBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            
+            // Hide control toggle for listener
+            controlToggle.style.display = 'none';
+            
+            // Update controls based on anyoneCanControl setting
+            updateUserControls();
+            
+            // Show listener message
+            if (listenerMessage) {
+                listenerMessage.style.display = 'block';
+            }
+            
+            log('🎧 Listener controls disabled');
+        }
+
+        function toggleAnyoneCanControl() {
+            const checkbox = document.getElementById('anyoneCanControl');
+            anyoneCanControl = checkbox.checked;
+            
+            // Send the setting to server
+            if (currentRoom && isAdmin) {
+                socket.emit('toggle_anyone_can_control', { 
+                    room: currentRoom, 
+                    enabled: anyoneCanControl 
+                });
+                
+                log(`${anyoneCanControl ? '🔓' : '🔒'} Anyone can control: ${anyoneCanControl ? 'ENABLED' : 'DISABLED'}`);
+            }
+            
+            // Update controls for all users
+            updateUserControls();
+        }
+
+        function updateUserControls() {
+            // Don't override admin status if already set
+            if (isAdmin) {
+                enableAdminControls();
+                return;
+            }
+            
+            const audioPlayer = document.getElementById('audioPlayer');
+            const listenerMessage = document.getElementById('listenerMessage');
+            const controlModeMessage = document.getElementById('controlModeMessage');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (anyoneCanControl) {
+                // Anyone can control mode - enable controls for listeners
+                audioPlayer.classList.add('admin-controls');
+                audioPlayer.controls = true;
+                nextBtn.disabled = false;
+                if (listenerMessage) {
+                    listenerMessage.style.display = 'block';
+                    controlModeMessage.style.display = 'block';
+                }
+                log('🎛️ Anyone can control mode - controls enabled for listeners');
+            } else {
+                // Normal listener mode - disable controls
+                audioPlayer.classList.remove('admin-controls');
+                audioPlayer.controls = false;
+                nextBtn.disabled = true;
+                if (listenerMessage) {
+                    listenerMessage.style.display = 'block';
+                    controlModeMessage.style.display = 'none';
+                }
+            }
+        }
+
+        function showQueueModal() {
+            document.getElementById('queueModal').classList.add('show');
+        }
+
+        function closeQueueModal() {
+            document.getElementById('queueModal').classList.remove('show');
+        }
+
+        function updateQueueDisplay(queue, currentSong) {
+            const queueList = document.getElementById('queueList');
+            const visibleQueueList = document.getElementById('visibleQueueList');
+            const visibleQueueSection = document.getElementById('visibleQueueSection');
+            const currentSongDisplay = document.getElementById('currentSongDisplay');
+            const currentSongDetails = document.getElementById('currentSongDetails');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // Update current song display
+            if (currentSong) {
+                currentSongDetails.innerHTML = `
+                    <strong>${currentSong.songInfo.track_name}</strong><br>
+                    <small>by ${currentSong.songInfo.artists_string}</small>
+                    ${currentSong.songInfo.album_name ? `<br><small>Album: ${currentSong.songInfo.album_name}</small>` : ''}
+                `;
+                currentSongDisplay.style.display = 'block';
+            } else {
+                currentSongDisplay.style.display = 'none';
+            }
+
+            // Update modal queue list
+            if (queue && queue.length > 0) {
+                queueList.innerHTML = '';
+                queue.forEach((item, index) => {
+                    const queueItem = document.createElement('div');
+                    queueItem.className = 'queue-item';
+                    queueItem.innerHTML = `
+                        <div class="queue-item-info">
+                            <strong>${item.songInfo.track_name}</strong>
+                            <small>by ${item.songInfo.artists_string}</small>
+                        </div>
+                        <div class="queue-item-actions">
+                            ${isAdmin ? `<button class="queue-btn" onclick="removeFromQueue(${index})" title="Remove from queue">❌</button>` : ''}
+                        </div>
+                    `;
+                    queueList.appendChild(queueItem);
+                });
+            } else {
+                queueList.innerHTML = '<div class="queue-empty">Queue is empty. Add songs to get started!</div>';
+            }
+
+            // Update visible queue list
+            if (queue && queue.length > 0) {
+                visibleQueueList.innerHTML = '';
+                queue.forEach((item, index) => {
+                    const visibleQueueItem = document.createElement('div');
+                    visibleQueueItem.className = 'visible-queue-item';
+                    visibleQueueItem.innerHTML = `
+                        <div class="queue-position">${index + 1}.</div>
+                        <div class="visible-queue-item-info">
+                            <strong>${item.songInfo.track_name}</strong>
+                            <small>by ${item.songInfo.artists_string}</small>
+                        </div>
+                    `;
+                    visibleQueueList.appendChild(visibleQueueItem);
+                });
+            } else {
+                visibleQueueList.innerHTML = '<div class="queue-empty">Queue is empty. Add songs to get started!</div>';
+            }
+
+            // Enable/disable queue and next buttons based on whether there are songs
+            const showQueueBtn = document.getElementById('showQueueBtn');
+            showQueueBtn.disabled = !queue || queue.length === 0;
+            nextBtn.disabled = !isAdmin || !queue || queue.length === 0;
         }
 
         function updateSongInfo(song) {

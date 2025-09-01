@@ -141,16 +141,46 @@ io.on('connection', (socket) => {
         users: new Set(),
         currentSong: null,
         startTime: null,
-        songDuration: null
+        songDuration: null,
+        queue: [], // Add queue for songs
+        isPlaying: false,
+        anyoneCanControl: false // Add anyone can control setting
       };
     }
     
-    if (isAdmin) rooms[room].admin = socket.id;
+    // Validate admin status - only set as admin if room has no admin or if they are already the admin
+    if (isAdmin) {
+      if (!rooms[room].admin) {
+        // Room has no admin, so this user becomes admin
+        rooms[room].admin = socket.id;
+        socket.isAdmin = true;
+        console.log(`👑 User ${socket.id} became admin of room ${room}`);
+      } else if (rooms[room].admin === socket.id) {
+        // User is already the admin
+        socket.isAdmin = true;
+        console.log(`👑 User ${socket.id} rejoined as admin of room ${room}`);
+      } else {
+        // Someone else is already admin, user becomes listener
+        socket.isAdmin = false;
+        console.log(`🚫 User ${socket.id} tried to join as admin but ${rooms[room].admin} is already admin - joining as listener`);
+      }
+    } else {
+      socket.isAdmin = false;
+    }
+    
     rooms[room].users.add(socket.id);
     socket.room = room;
-    socket.isAdmin = isAdmin;
     
-    console.log(`User ${socket.id} joined room ${room} as ${isAdmin ? 'admin' : 'listener'}`);
+    console.log(`User ${socket.id} joined room ${room} as ${socket.isAdmin ? 'admin' : 'listener'}`);
+    
+    // Send actual admin status to client
+    socket.emit('admin_status', { isAdmin: socket.isAdmin });
+    
+    // Send current queue to new user
+    socket.emit('queue_update', { queue: rooms[room].queue, currentSong: rooms[room].currentSong });
+    
+    // Send current anyoneCanControl setting to new user
+    socket.emit('toggle_anyone_can_control', { enabled: rooms[room].anyoneCanControl });
     
     // If there's a song currently playing, sync the new user
     if (rooms[room].currentSong && rooms[room].startTime) {
@@ -173,6 +203,24 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('add_to_queue', ({ room, url, songInfo, duration }) => {
+    // Only admin can add to queue
+    if (rooms[room] && rooms[room].admin === socket.id) {
+      console.log(`➕ Admin ${socket.id} added song to queue in room ${room}: ${songInfo?.track_name || url}`);
+      
+      // Add song to queue
+      rooms[room].queue.push({ url, songInfo, duration });
+      
+      // If no song is currently playing, start playing this song
+      if (!rooms[room].isPlaying && rooms[room].queue.length === 1) {
+        playNextSong(room);
+      } else {
+        // Broadcast queue update
+        io.to(room).emit('queue_update', { queue: rooms[room].queue, currentSong: rooms[room].currentSong });
+      }
+    }
+  });
+
   socket.on('play_song', ({ room, url, startAt, songInfo, duration }) => {
     // Only admin can trigger
     if (rooms[room] && rooms[room].admin === socket.id) {
@@ -182,18 +230,95 @@ io.on('connection', (socket) => {
       rooms[room].currentSong = { url, songInfo };
       rooms[room].startTime = startAt;
       rooms[room].songDuration = duration ? duration * 1000 : null; // Convert to ms
+      rooms[room].isPlaying = true;
       
       io.to(room).emit('play_song', { url, startAt, songInfo });
     }
   });
 
+  socket.on('remove_from_queue', ({ room, index }) => {
+    // Only admin can remove from queue
+    if (rooms[room] && rooms[room].admin === socket.id && rooms[room].queue[index]) {
+      const removedSong = rooms[room].queue.splice(index, 1)[0];
+      console.log(`➖ Admin ${socket.id} removed song from queue in room ${room}: ${removedSong.songInfo?.track_name || removedSong.url}`);
+      
+      // Broadcast queue update
+      io.to(room).emit('queue_update', { queue: rooms[room].queue, currentSong: rooms[room].currentSong });
+    }
+  });
+
+  socket.on('clear_queue', ({ room }) => {
+    // Only admin can clear queue
+    if (rooms[room] && rooms[room].admin === socket.id) {
+      rooms[room].queue = [];
+      console.log(`🗑️ Admin ${socket.id} cleared queue in room ${room}`);
+      
+      // Broadcast queue update
+      io.to(room).emit('queue_update', { queue: rooms[room].queue, currentSong: rooms[room].currentSong });
+    }
+  });
+
   socket.on('song_ended', ({ room }) => {
-    // Clear current song when it ends
+    // Clear current song when it ends and play next song
     if (rooms[room]) {
       console.log(`🔚 Song ended in room ${room}`);
       rooms[room].currentSong = null;
       rooms[room].startTime = null;
       rooms[room].songDuration = null;
+      rooms[room].isPlaying = false;
+      
+      // Play next song in queue
+      playNextSong(room);
+    }
+  });
+
+  socket.on('skip_to_next', ({ room }) => {
+    // Allow skipping if user is admin OR anyone can control is enabled
+    const canSkip = rooms[room] && (rooms[room].admin === socket.id || rooms[room].anyoneCanControl);
+    
+    if (canSkip) {
+      console.log(`⏭️ User ${socket.id} skipped to next song in room ${room}`);
+      
+      // Clear current song and play next
+      rooms[room].currentSong = null;
+      rooms[room].startTime = null;
+      rooms[room].songDuration = null;
+      rooms[room].isPlaying = false;
+      
+      // Play next song in queue
+      playNextSong(room);
+    } else {
+      console.log(`🚫 Skip blocked for user ${socket.id} in room ${room} (not authorized)`);
+    }
+  });
+
+  socket.on('seek_song', ({ room, seekTime }) => {
+    // Allow seeking if user is admin OR anyone can control is enabled
+    const canSeek = rooms[room] && (rooms[room].admin === socket.id || rooms[room].anyoneCanControl);
+    
+    if (canSeek) {
+      console.log(`⏩ User ${socket.id} seeked to ${seekTime.toFixed(2)}s in room ${room}`);
+      
+      // Update the start time to reflect the seek
+      if (rooms[room].currentSong) {
+        rooms[room].startTime = Date.now() - (seekTime * 1000);
+      }
+      
+      // Broadcast seek command to all users in room (except sender)
+      socket.to(room).emit('seek_song', { seekTime: seekTime });
+    } else {
+      console.log(`🚫 Seek blocked for user ${socket.id} in room ${room} (not authorized)`);
+    }
+  });
+
+  socket.on('toggle_anyone_can_control', ({ room, enabled }) => {
+    // Only admin can toggle this setting
+    if (rooms[room] && rooms[room].admin === socket.id) {
+      rooms[room].anyoneCanControl = enabled;
+      console.log(`${enabled ? '🔓' : '🔒'} Admin ${socket.id} ${enabled ? 'enabled' : 'disabled'} anyone can control in room ${room}`);
+      
+      // Broadcast the setting to all users in room
+      io.to(room).emit('toggle_anyone_can_control', { enabled: enabled });
     }
   });
 
@@ -213,6 +338,38 @@ io.on('connection', (socket) => {
     console.log(`👋 User ${socket.id} disconnected`);
   });
 });
+
+// Helper function to play next song in queue
+function playNextSong(room) {
+  if (!rooms[room] || rooms[room].queue.length === 0) {
+    console.log(`📭 No songs in queue for room ${room}`);
+    rooms[room].isPlaying = false;
+    io.to(room).emit('queue_update', { queue: rooms[room].queue, currentSong: null });
+    return;
+  }
+  
+  const nextSong = rooms[room].queue.shift();
+  console.log(`▶️ Playing next song in room ${room}: ${nextSong.songInfo?.track_name || nextSong.url}`);
+  
+  // Calculate start time (2 seconds from now)
+  const startAt = Date.now() + 2000;
+  
+  // Store current song info
+  rooms[room].currentSong = { url: nextSong.url, songInfo: nextSong.songInfo };
+  rooms[room].startTime = startAt;
+  rooms[room].songDuration = nextSong.duration ? nextSong.duration * 1000 : null;
+  rooms[room].isPlaying = true;
+  
+  // Broadcast play command
+  io.to(room).emit('play_song', { 
+    url: nextSong.url, 
+    startAt: startAt, 
+    songInfo: nextSong.songInfo 
+  });
+  
+  // Broadcast queue update
+  io.to(room).emit('queue_update', { queue: rooms[room].queue, currentSong: rooms[room].currentSong });
+}
 
 // API: Get all playlists with song counts (lightweight)
 app.get('/playlists', (req, res) => {
