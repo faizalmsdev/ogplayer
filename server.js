@@ -221,10 +221,21 @@ io.on('connection', (socket) => {
     );
     
     if (canAdd) {
+      // Preserve original song info and only use defaults if fields are missing
+      console.log('Received song info:', songInfo); // Debug log
+
+      // Add song to queue with original info
+      rooms[room].queue.push({ 
+        url, 
+        songInfo: {
+          ...songInfo, // Keep all original song info
+          url: url, // Ensure URL is always set
+          github_url: songInfo?.github_url || url // Fallback for github_url
+        },
+        duration 
+      });
+
       console.log(`➕ User ${socket.id} added song to queue in room ${room}: ${songInfo?.track_name || url}`);
-      
-      // Add song to queue
-      rooms[room].queue.push({ url, songInfo, duration });
       
       // If no song is currently playing, start playing this song
       if (!rooms[room].isPlaying && rooms[room].queue.length === 1) {
@@ -382,17 +393,29 @@ function playNextSong(room) {
   // Calculate start time (2 seconds from now)
   const startAt = Date.now() + 2000;
   
+  // Store current song info while preserving original metadata
+  const currentSongInfo = {
+    url: nextSong.url,
+    songInfo: {
+      ...nextSong.songInfo, // Keep all original song metadata
+      url: nextSong.url, // Ensure URL is always set
+      github_url: nextSong.songInfo?.github_url || nextSong.url // Fallback for github_url
+    }
+  };
+
+  console.log('Playing song with info:', currentSongInfo); // Debug log
+  
   // Store current song info
-  rooms[room].currentSong = { url: nextSong.url, songInfo: nextSong.songInfo };
+  rooms[room].currentSong = currentSongInfo;
   rooms[room].startTime = startAt;
   rooms[room].songDuration = nextSong.duration ? nextSong.duration * 1000 : null;
   rooms[room].isPlaying = true;
   
-  // Broadcast play command
+  // Broadcast play command with formatted info
   io.to(room).emit('play_song', { 
     url: nextSong.url, 
     startAt: startAt, 
-    songInfo: nextSong.songInfo 
+    songInfo: currentSongInfo.songInfo
   });
   
   // Broadcast queue update
