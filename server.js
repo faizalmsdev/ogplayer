@@ -131,6 +131,16 @@ const rooms = {};
 io.on('connection', (socket) => {
   console.log(`New connection: ${socket.id}`);
 
+  socket.on('request_queue_sync', ({ room }) => {
+    if (rooms[room]) {
+      console.log(`📊 Sending queue sync to ${socket.id} for room ${room}`);
+      socket.emit('queue_sync_response', { 
+        queue: rooms[room].queue, 
+        currentSong: rooms[room].currentSong 
+      });
+    }
+  });
+
   socket.on('join_room', ({ room, isAdmin }) => {
     socket.join(room);
     
@@ -204,9 +214,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('add_to_queue', ({ room, url, songInfo, duration }) => {
-    // Only admin can add to queue
-    if (rooms[room] && rooms[room].admin === socket.id) {
-      console.log(`➕ Admin ${socket.id} added song to queue in room ${room}: ${songInfo?.track_name || url}`);
+    // Allow admin or anyone if control mode is enabled
+    const canAdd = rooms[room] && (
+      rooms[room].admin === socket.id || 
+      rooms[room].anyoneCanControl
+    );
+    
+    if (canAdd) {
+      console.log(`➕ User ${socket.id} added song to queue in room ${room}: ${songInfo?.track_name || url}`);
       
       // Add song to queue
       rooms[room].queue.push({ url, songInfo, duration });
@@ -237,19 +252,32 @@ io.on('connection', (socket) => {
   });
 
   socket.on('remove_from_queue', ({ room, index }) => {
-    // Only admin can remove from queue
-    if (rooms[room] && rooms[room].admin === socket.id && rooms[room].queue[index]) {
+    // Allow admin or anyone if control mode is enabled
+    const canRemove = rooms[room] && (
+      rooms[room].admin === socket.id || 
+      rooms[room].anyoneCanControl
+    );
+    
+    if (canRemove && rooms[room].queue[index]) {
       const removedSong = rooms[room].queue.splice(index, 1)[0];
-      console.log(`➖ Admin ${socket.id} removed song from queue in room ${room}: ${removedSong.songInfo?.track_name || removedSong.url}`);
+      console.log(`➖ User ${socket.id} removed song from queue in room ${room}: ${removedSong.songInfo?.track_name || removedSong.url}`);
       
-      // Broadcast queue update
-      io.to(room).emit('queue_update', { queue: rooms[room].queue, currentSong: rooms[room].currentSong });
+      // Broadcast queue update to ALL users in room
+      io.to(room).emit('queue_update', { 
+        queue: rooms[room].queue, 
+        currentSong: rooms[room].currentSong 
+      });
     }
   });
 
   socket.on('clear_queue', ({ room }) => {
-    // Only admin can clear queue
-    if (rooms[room] && rooms[room].admin === socket.id) {
+    // Allow admin or anyone if control mode is enabled
+    const canClear = rooms[room] && (
+      rooms[room].admin === socket.id || 
+      rooms[room].anyoneCanControl
+    );
+    
+    if (canClear) {
       rooms[room].queue = [];
       console.log(`🗑️ Admin ${socket.id} cleared queue in room ${room}`);
       
