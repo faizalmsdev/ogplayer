@@ -1,5 +1,5 @@
 {
-  "mapping": {
+  "song_to_playlists": {
     "song_06ffdb5ab169": [
       "All in one"
     ],
@@ -1905,7 +1905,8 @@
       "artist_5FVBduYaeVBb6JIghza7v6"
     ],
     "song_db265dca2a3d": [
-      "AR-Rahman-all-songs"
+      "AR-Rahman-all-songs",
+      "Trending-now-tamil"
     ],
     "song_904bf1165439": [
       "Tamil songs that feel good now"
@@ -7209,47 +7210,56 @@
       "Latest hits tamil",
       "anirudhravichander",
       "artist_5jJrJU7VVmxQQLcLAmmxXc",
-      "artist_6sXT8Cggm4tmoxhVjaUVs0"
+      "artist_6sXT8Cggm4tmoxhVjaUVs0",
+      "Trending-now-tamil"
     ],
     "song_4a9e0003db01": [
       "Latest hits tamil",
       "anirudhravichander",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_3bsrlEbnX8sWwXlTe80RSr"
+      "artist_3bsrlEbnX8sWwXlTe80RSr",
+      "Trending-now-tamil"
     ],
     "song_6789994104cf": [
       "Latest hits tamil",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_5jJrJU7VVmxQQLcLAmmxXc"
+      "artist_5jJrJU7VVmxQQLcLAmmxXc",
+      "Trending-now-tamil"
     ],
     "song_494f41cd7b1f": [
       "Latest hits tamil",
       "anirudhravichander",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_3bsrlEbnX8sWwXlTe80RSr"
+      "artist_3bsrlEbnX8sWwXlTe80RSr",
+      "Trending-now-tamil"
     ],
     "song_37e32a4327f3": [
       "Latest hits tamil",
       "artist_5VVN3xZw1i2qihfITZlvCZ",
-      "artist_2F3KtUVtrt2GLjcl6pB4cz"
+      "artist_2F3KtUVtrt2GLjcl6pB4cz",
+      "Trending-now-tamil"
     ],
     "song_18347a06140f": [
       "Latest hits tamil",
       "anirudhravichander",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_3bsrlEbnX8sWwXlTe80RSr"
+      "artist_3bsrlEbnX8sWwXlTe80RSr",
+      "Trending-now-tamil"
     ],
     "song_c5c134cadb0d": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_e7baab72ad4b": [
       "Trending now tamil",
-      "artist_5FVBduYaeVBb6JIghza7v6"
+      "artist_5FVBduYaeVBb6JIghza7v6",
+      "Trending-now-tamil"
     ],
     "song_7bfa067fafba": [
       "Latest hits tamil",
       "artist_0nh5cRtt03SU6LhzhVC5fv",
-      "artist_5FVBduYaeVBb6JIghza7v6"
+      "artist_5FVBduYaeVBb6JIghza7v6",
+      "Trending-now-tamil"
     ],
     "song_f4e71c6fb136": [
       "Latest hits tamil",
@@ -7258,37 +7268,44 @@
       "artist_7rVV9d6vc4FLT752uRuk71",
       "artist_3bsrlEbnX8sWwXlTe80RSr",
       "artist_06LQ9Fd6sSPiuBQFiEjoiP",
-      "artist_6JE733zwV1iKGcVsWWvY0e"
+      "artist_6JE733zwV1iKGcVsWWvY0e",
+      "Trending-now-tamil"
     ],
     "song_9b306a4f7315": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_8029ef58cdb9": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_59403bd36ecd": [
       "Latest hits tamil",
       "Anirudh-all-songs-tamil",
       "anirudhravichander",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_3bsrlEbnX8sWwXlTe80RSr"
+      "artist_3bsrlEbnX8sWwXlTe80RSr",
+      "Trending-now-tamil"
     ],
     "song_024bab76ed59": [
       "Latest hits tamil"
     ],
     "song_a5513513b274": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_6e39d1390f0e": [
       "Latest hits tamil",
       "anirudhravichander",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_3bsrlEbnX8sWwXlTe80RSr"
+      "artist_3bsrlEbnX8sWwXlTe80RSr",
+      "Trending-now-tamil"
     ],
     "song_3f7dea782f3b": [
       "Trending now tamil",
       "artist_139FRgoVcJ82jogPttiWcc",
-      "artist_5jJrJU7VVmxQQLcLAmmxXc"
+      "artist_5jJrJU7VVmxQQLcLAmmxXc",
+      "Trending-now-tamil"
     ],
     "song_0d7248dbb972": [
       "Latest hits tamil",
@@ -7300,23 +7317,27 @@
       "Anirudh-all-songs-tamil",
       "anirudhravichander",
       "artist_7rVV9d6vc4FLT752uRuk71",
-      "artist_3bsrlEbnX8sWwXlTe80RSr"
+      "artist_3bsrlEbnX8sWwXlTe80RSr",
+      "Trending-now-tamil"
     ],
     "song_1b12320819a7": [
       "Latest hits tamil"
     ],
     "song_a334aeaa1d10": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_70f836eacd2e": [
       "Latest hits tamil",
       "anirudhravichander",
       "artist_2n2CcYTvgrHcpKGDHtelgz",
-      "artist_6sXT8Cggm4tmoxhVjaUVs0"
+      "artist_6sXT8Cggm4tmoxhVjaUVs0",
+      "Trending-now-tamil"
     ],
     "song_8fd3fad08c88": [
       "Trending now tamil",
-      "artist_4b1WCDqAVVgxK7KozLkOqc"
+      "artist_4b1WCDqAVVgxK7KozLkOqc",
+      "Trending-now-tamil"
     ],
     "song_0498a7a751eb": [
       "Latest hits tamil"
@@ -7325,16 +7346,20 @@
       "Latest hits tamil"
     ],
     "song_08444ede5a54": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_3feec8034ea5": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_97e7b5506e2e": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_dafb7d8155de": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_45d625ed2699": [
       "Latest hits tamil"
@@ -7346,38 +7371,47 @@
       "Latest hits tamil",
       "anirudhravichander",
       "artist_6sXT8Cggm4tmoxhVjaUVs0",
-      "artist_1plObTufEAfeL1hk8Qz24v"
+      "artist_1plObTufEAfeL1hk8Qz24v",
+      "Trending-now-tamil"
     ],
     "song_50401698e393": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_a082d4b37846": [
       "Latest hits tamil",
       "artist_6AiX12wXdXFoGJ2vk8zBjy"
     ],
     "song_ec01fbb033ef": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_48c4e502acac": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_ca15ff8be039": [
       "Latest hits tamil"
     ],
     "song_1226d007398c": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_3b040e5c0839": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_7b5c617b9844": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_280e1be951bb": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_079e2038eac8": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_0b6f75d45294": [
       "Latest hits tamil",
@@ -7385,18 +7419,21 @@
       "artist_1lDx24tVvy8JVKOVjnlJfv"
     ],
     "song_8777f0bf4747": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_30e6254d2d53": [
       "Latest hits tamil",
       "artist_5VVN3xZw1i2qihfITZlvCZ",
-      "artist_6BgdqnUJR0OdLQ7k1UHw5E"
+      "artist_6BgdqnUJR0OdLQ7k1UHw5E",
+      "Trending-now-tamil"
     ],
     "song_161d98826b3c": [
       "Latest hits tamil"
     ],
     "song_ce9618bf2814": [
-      "Latest hits tamil"
+      "Latest hits tamil",
+      "Trending-now-tamil"
     ],
     "song_6c26b89531c9": [
       "Latest hits tamil"
@@ -7406,7 +7443,8 @@
     ],
     "song_068fceb66be5": [
       "Latest hits tamil",
-      "artist_5FVBduYaeVBb6JIghza7v6"
+      "artist_5FVBduYaeVBb6JIghza7v6",
+      "Trending-now-tamil"
     ],
     "song_5cdda64644c2": [
       "Latest hits tamil"
@@ -7447,7 +7485,8 @@
     ],
     "song_54f185850ff6": [
       "Latest hits tamil",
-      "artist_1jnYex347Mx1pD9r6JtNhO"
+      "artist_1jnYex347Mx1pD9r6JtNhO",
+      "Trending-now-tamil"
     ],
     "song_42e4f79a473e": [
       "Latest hits tamil"
@@ -27463,7 +27502,8 @@
       "artist_12CpR4SNDzVIlDoPSeNFeW"
     ],
     "song_fe79876796a1": [
-      "artist_1lDx24tVvy8JVKOVjnlJfv"
+      "artist_1lDx24tVvy8JVKOVjnlJfv",
+      "Trending-now-tamil"
     ],
     "song_ea170530779f": [
       "artist_1lDx24tVvy8JVKOVjnlJfv"
@@ -62284,7 +62324,8 @@
       "artist_2FgHPfRprDaylrSRVf1UlN"
     ],
     "song_67f49977724a": [
-      "artist_2FgHPfRprDaylrSRVf1UlN"
+      "artist_2FgHPfRprDaylrSRVf1UlN",
+      "Trending-now-tamil"
     ],
     "song_001265a0e17f": [
       "artist_2FgHPfRprDaylrSRVf1UlN"
@@ -65638,10 +65679,12 @@
       "artist_5hMqWI3uRKI3hVaSVjgBvu"
     ],
     "song_b452f2637696": [
-      "artist_5hMqWI3uRKI3hVaSVjgBvu"
+      "artist_5hMqWI3uRKI3hVaSVjgBvu",
+      "Trending-now-tamil"
     ],
     "song_1866dab0853b": [
-      "artist_5hMqWI3uRKI3hVaSVjgBvu"
+      "artist_5hMqWI3uRKI3hVaSVjgBvu",
+      "Trending-now-tamil"
     ],
     "song_13d97747a5c1": [
       "artist_5hMqWI3uRKI3hVaSVjgBvu"
@@ -77245,7 +77288,8 @@
       "artist_4kq8z3vydHjPDggxb16ErB"
     ],
     "song_aa265f27403f": [
-      "artist_4kq8z3vydHjPDggxb16ErB"
+      "artist_4kq8z3vydHjPDggxb16ErB",
+      "Trending-now-tamil"
     ],
     "song_b93cfe169fc2": [
       "artist_4kq8z3vydHjPDggxb16ErB"
@@ -78065,7 +78109,104 @@
     ],
     "song_3d0909d145e6": [
       "artist_4kq8z3vydHjPDggxb16ErB"
+    ],
+    "song_b139363b0a36": [
+      "Trending-now-tamil"
+    ],
+    "song_dcc590a7a9c4": [
+      "Trending-now-tamil"
+    ],
+    "song_c3aa11e1a902": [
+      "Trending-now-tamil"
+    ],
+    "song_0f3f01f16b88": [
+      "Trending-now-tamil"
+    ],
+    "song_aab6c631f1c8": [
+      "Trending-now-tamil"
+    ],
+    "song_f7aa291091db": [
+      "Trending-now-tamil"
+    ],
+    "song_9313d7997dc0": [
+      "Trending-now-tamil"
+    ],
+    "song_84383e096ac5": [
+      "Trending-now-tamil"
+    ],
+    "song_312fc3f7696d": [
+      "Trending-now-tamil"
+    ],
+    "song_61b136fe9a00": [
+      "Trending-now-tamil"
+    ],
+    "song_30461674a5b8": [
+      "Trending-now-tamil"
+    ],
+    "song_2f550a733571": [
+      "Trending-now-tamil"
+    ],
+    "song_95376265a385": [
+      "Trending-now-tamil"
+    ],
+    "song_556508a2ddbe": [
+      "Trending-now-tamil"
+    ],
+    "song_d648b82c9093": [
+      "Trending-now-tamil"
+    ],
+    "song_a5d6e6e651a3": [
+      "Trending-now-tamil"
+    ],
+    "song_9c0aef498b50": [
+      "Trending-now-tamil"
+    ],
+    "song_03177b5c014b": [
+      "Trending-now-tamil"
+    ],
+    "song_7ed3fda385b9": [
+      "Trending-now-tamil"
+    ],
+    "song_2e22b3ba61f8": [
+      "Trending-now-tamil"
+    ],
+    "song_696b1ce6f9cb": [
+      "Trending-now-tamil"
+    ],
+    "song_76d82e8861ec": [
+      "Trending-now-tamil"
+    ],
+    "song_d7706f2a5dea": [
+      "Trending-now-tamil"
+    ],
+    "song_96dd36d0deb9": [
+      "Trending-now-tamil"
+    ],
+    "song_5fbce7654def": [
+      "Trending-now-tamil"
+    ],
+    "song_6b2404fe14ad": [
+      "Trending-now-tamil"
+    ],
+    "song_0e1e2beb2859": [
+      "Trending-now-tamil"
+    ],
+    "song_166555feac66": [
+      "Trending-now-tamil"
+    ],
+    "song_04bed484195f": [
+      "Trending-now-tamil"
+    ],
+    "song_c9347dfa9967": [
+      "Trending-now-tamil"
+    ],
+    "song_9adc29156498": [
+      "Trending-now-tamil"
     ]
   },
-  "last_updated": "2025-08-31T20:58:25.147115"
+  "stats": {
+    "total_mappings": 24616,
+    "generated_at": "2025-09-01T13:06:00.276507",
+    "last_updated_playlist": "Trending-now-tamil"
+  }
 }
