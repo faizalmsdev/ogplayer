@@ -8,7 +8,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:8080",
+    origin: [
+      "http://localhost:8080",
+      "https://groovify.live",
+      "http://localhost:3000",
+      "http://127.0.0.1:8080",
+      "http://127.0.0.1:3000"
+    ],
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -31,11 +37,30 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Enable CORS for development
+// Enable CORS for development and production
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  next();
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'https://groovify.live',
+    'http://localhost:3000',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:3000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
 });
 
 // Helper function to load JSON files with caching
