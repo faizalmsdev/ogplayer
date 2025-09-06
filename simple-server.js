@@ -438,13 +438,15 @@ io.on('connection', (socket) => {
 });
 
 // Health check
-app.get('/ping', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+app.get("/ping", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send({
+    status: "ok",
     timestamp: new Date().toISOString(),
-    message: 'Simple YouTube Music Server'
+    message: "Simple YouTube Music Server"
   });
 });
+
 
 // Check if yt-dlp is installed
 exec('yt-dlp --version', (error, stdout, stderr) => {
