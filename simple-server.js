@@ -274,8 +274,9 @@ app.get('/api/search', async (req, res) => {
     const args = [
       '--dump-json',
       '--flat-playlist',
-      '--extractor-args', 'youtube:player_client=android',
+      '--extractor-args', 'youtube:player_client=android,ios,web',
       '--extractor-args', 'youtube:player_skip=webpage',
+      '--retry-sleep', 'linear=1:2:3',
       `ytsearch${limit}:${query}`
     ];
 
@@ -365,34 +366,69 @@ app.get('/api/stream/:videoId', async (req, res) => {
     console.log(`🎵 Getting stream URL for: ${videoId}`);
     
     // Try multiple format strategies for better compatibility
-    const formatStrategies = [
-      'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio[ext=mp4]/bestaudio',
-      'bestaudio[acodec=aac]/bestaudio[acodec=mp4a]/bestaudio',
-      'bestaudio/best[height<=480]',
-      'best[height<=360]/worst'
+    const extractionStrategies = [
+      {
+        name: 'Standard with Android client',
+        format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio[ext=mp4]/bestaudio',
+        args: ['--extractor-args', 'youtube:player_client=android']
+      },
+      {
+        name: 'iOS client extraction',
+        format: 'bestaudio[acodec=aac]/bestaudio[acodec=mp4a]/bestaudio',
+        args: ['--extractor-args', 'youtube:player_client=ios']
+      },
+      {
+        name: 'Web client with skip',
+        format: 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
+        args: ['--extractor-args', 'youtube:player_client=web,youtube:player_skip=webpage']
+      },
+      {
+        name: 'TV client extraction',
+        format: 'bestaudio/best[height<=480]',
+        args: ['--extractor-args', 'youtube:player_client=tv']
+      },
+      {
+        name: 'Multiple clients with retry',
+        format: 'bestaudio[ext=m4a]/bestaudio',
+        args: [
+          '--extractor-args', 'youtube:player_client=android,ios,web',
+          '--retry-sleep', 'linear=1:3:5',
+          '--extractor-retries', '2'
+        ]
+      },
+      {
+        name: 'Age-gate bypass',
+        format: 'best[height<=360]/worst',
+        args: [
+          '--extractor-args', 'youtube:player_client=android',
+          '--extractor-args', 'youtube:skip=hls,dash',
+          '--age-limit', '99'
+        ]
+      }
     ];
 
     let streamUrl = null;
     let lastError = null;
 
-    for (const format of formatStrategies) {
+    for (const strategy of extractionStrategies) {
       try {
+        console.log(`Trying strategy: ${strategy.name}`);
+        
         const args = [
           '--get-url',
-          '--format', format,
-          '--extractor-args', 'youtube:player_client=android',
-          '--extractor-args', 'youtube:player_skip=webpage',
+          '--format', strategy.format,
+          ...strategy.args,
           `https://youtube.com/watch?v=${videoId}`
         ];
 
         streamUrl = await runYtDlp(args);
         if (streamUrl && streamUrl.startsWith('http')) {
-          console.log(`✅ Stream URL obtained using format: ${format}`);
+          console.log(`✅ Stream URL obtained using: ${strategy.name}`);
           break;
         }
       } catch (error) {
         lastError = error;
-        console.log(`❌ Failed with format ${format}, trying next...`);
+        console.log(`❌ Failed with ${strategy.name}: ${error.message}`);
         continue;
       }
     }
@@ -576,8 +612,9 @@ app.get('/api/info/:videoId', async (req, res) => {
     
     const args = [
       '--dump-json',
-      '--extractor-args', 'youtube:player_client=android',
+      '--extractor-args', 'youtube:player_client=android,ios,web',
       '--extractor-args', 'youtube:player_skip=webpage',
+      '--retry-sleep', 'linear=1:2:3',
       `https://youtube.com/watch?v=${videoId}`
     ];
 
