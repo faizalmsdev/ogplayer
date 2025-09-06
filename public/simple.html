@@ -335,7 +335,7 @@
                     <div class="current-song-uploader" id="currentUploader"></div>
                 </div>
             </div>
-            <audio id="audioPlayer" class="audio-player" controls autoplay>
+            <audio id="audioPlayer" class="audio-player" controls autoplay crossorigin="anonymous" preload="none">
                 Your browser does not support the audio element.
             </audio>
         </div>
@@ -475,6 +475,37 @@
             thumbnail.alt = `${song.title} thumbnail`;
             title.textContent = song.title;
             uploader.textContent = song.uploader;
+            
+            // Set up error handling for the audio element
+            audio.onerror = function(e) {
+                console.error('Audio error:', e);
+                showError(`Failed to load audio for: ${song.title}. This might be due to regional restrictions or the video being unavailable.`);
+                
+                // Try alternative approach - get direct URL
+                fetch(`/api/stream-url/${song.id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Trying direct URL:', data.streamUrl);
+                            audio.src = data.streamUrl;
+                        } else {
+                            showError('Unable to stream this video. It may be restricted or unavailable.');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to get direct URL:', err);
+                        showError('Unable to stream this video. Please try another song.');
+                    });
+            };
+            
+            audio.onloadstart = function() {
+                console.log('Audio loading started for:', song.title);
+            };
+            
+            audio.oncanplay = function() {
+                console.log('Audio can start playing:', song.title);
+            };
+            
             audio.src = `/api/stream/${song.id}`;
             
             player.style.display = 'block';

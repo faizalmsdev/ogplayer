@@ -22,11 +22,21 @@ const PORT = 3001;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Enable CORS
+// Enable CORS with enhanced headers for media streaming
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  
   next();
 });
 
@@ -335,7 +345,7 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-// API: Get stream URL for a video with enhanced compatibility
+// API: Get stream URL for a video with enhanced compatibility and proxy streaming
 app.get('/api/stream/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
 
@@ -347,7 +357,7 @@ app.get('/api/stream/:videoId', async (req, res) => {
   if (streamCache.has(videoId)) {
     const cached = streamCache.get(videoId);
     if (Date.now() - cached.timestamp < CACHE_DURATION) {
-      return res.redirect(cached.url);
+      return proxyStream(cached.url, req, res);
     }
   }
 
@@ -395,7 +405,10 @@ app.get('/api/stream/:videoId', async (req, res) => {
       });
 
       console.log(`✅ Stream URL obtained for: ${videoId}`);
-      res.redirect(streamUrl);
+      
+      // Proxy the stream instead of redirecting to avoid CORS issues
+      return proxyStream(streamUrl, req, res);
+      
     } else {
       console.error('All format strategies failed for:', videoId);
       res.status(404).json({ 
@@ -411,6 +424,145 @@ app.get('/api/stream/:videoId', async (req, res) => {
       error: 'Failed to get stream URL', 
       details: error.message,
       suggestion: 'Try updating yt-dlp: pip install -U yt-dlp'
+    });
+  }
+});
+
+// Function to proxy stream with proper headers for CORS
+function proxyStream(streamUrl, req, res) {
+  const https = require('https');
+  const url = require('url');
+  
+  const parsedUrl = url.parse(streamUrl);
+  const isHttps = parsedUrl.protocol === 'https:';
+  const httpModule = isHttps ? https : require('http');
+  
+  const options = {
+    hostname: parsedUrl.hostname,
+    port: parsedUrl.port || (isHttps ? 443 : 80),
+    path: parsedUrl.path,
+    method: req.method,
+    headers: {
+      'User-Agent': USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)],
+      'Accept': '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'identity',
+      'Connection': 'keep-alive',
+      // Forward range headers for seeking support
+      ...(req.headers.range && { 'Range': req.headers.range })
+    }
+  };
+
+  const proxyReq = httpModule.request(options, (proxyRes) => {
+    // Set CORS and media streaming headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Accept-Ranges', 'bytes');
+    
+    // Forward content headers
+    if (proxyRes.headers['content-type']) {
+      res.setHeader('Content-Type', proxyRes.headers['content-type']);
+    }
+    if (proxyRes.headers['content-length']) {
+      res.setHeader('Content-Length', proxyRes.headers['content-length']);
+    }
+    if (proxyRes.headers['content-range']) {
+      res.setHeader('Content-Range', proxyRes.headers['content-range']);
+    }
+    if (proxyRes.headers['accept-ranges']) {
+      res.setHeader('Accept-Ranges', proxyRes.headers['accept-ranges']);
+    }
+    
+    // Set status code
+    res.statusCode = proxyRes.statusCode;
+    
+    // Pipe the response
+    proxyRes.pipe(res);
+  });
+
+  proxyReq.on('error', (error) => {
+    console.error('Proxy error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Stream proxy failed', 
+        details: error.message 
+      });
+    }
+  });
+
+  // Handle client disconnect
+  req.on('close', () => {
+    proxyReq.destroy();
+  });
+
+  proxyReq.end();
+}
+
+// Alternative endpoint to get direct stream URL (for testing/debugging)
+app.get('/api/stream-url/:videoId', async (req, res) => {
+  const videoId = req.params.videoId;
+
+  if (!videoId) {
+    return res.status(400).json({ error: 'Video ID is required' });
+  }
+
+  // Check cache first
+  if (streamCache.has(videoId)) {
+    const cached = streamCache.get(videoId);
+    if (Date.now() - cached.timestamp < CACHE_DURATION) {
+      return res.json({ 
+        success: true, 
+        streamUrl: cached.url, 
+        videoId: videoId,
+        cached: true
+      });
+    }
+  }
+
+  try {
+    console.log(`🎵 Getting direct stream URL for: ${videoId}`);
+    
+    const args = [
+      '--get-url',
+      '--format', 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
+      '--extractor-args', 'youtube:player_client=android',
+      '--extractor-args', 'youtube:player_skip=webpage',
+      `https://youtube.com/watch?v=${videoId}`
+    ];
+
+    const streamUrl = await runYtDlp(args);
+    
+    if (streamUrl && streamUrl.startsWith('http')) {
+      // Cache the stream URL
+      streamCache.set(videoId, {
+        url: streamUrl,
+        timestamp: Date.now()
+      });
+
+      console.log(`✅ Direct stream URL obtained for: ${videoId}`);
+      res.json({ 
+        success: true, 
+        streamUrl: streamUrl, 
+        videoId: videoId,
+        cached: false
+      });
+    } else {
+      res.status(404).json({ 
+        success: false,
+        error: 'Stream URL not found', 
+        videoId: videoId
+      });
+    }
+
+  } catch (error) {
+    console.error('Direct stream error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get direct stream URL', 
+      details: error.message,
+      videoId: videoId
     });
   }
 });
