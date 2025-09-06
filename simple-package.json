@@ -1,0 +1,23 @@
+{
+  "name": "simple-youtube-music-server",
+  "version": "1.0.0",
+  "description": "Simple YouTube music server using yt-dlp",
+  "main": "simple-server.js",
+  "scripts": {
+    "start": "node simple-server.js",
+    "dev": "nodemon simple-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "youtube",
+    "music",
+    "streaming",
+    "yt-dlp"
+  ]
+}

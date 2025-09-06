@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple YouTube Music Player</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            background: #ff6b6b;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+
+        .current-player {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .current-player h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .current-song {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .current-song img {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .current-song-info {
+            flex: 1;
+        }
+
+        .current-song-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .current-song-uploader {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .search-results {
+            display: grid;
+            gap: 15px;
+        }
+
+        .song-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .song-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .song-thumbnail {
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .song-thumbnail:hover {
+            transform: scale(1.05);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .song-info {
+            flex: 1;
+        }
+
+        .song-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 16px;
+            line-height: 1.3;
+        }
+
+        .song-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .song-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-play {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-play:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .btn-queue {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-queue:hover {
+            background: #1976D2;
+            transform: scale(1.05);
+        }
+
+        .queue-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .queue-section h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .queue-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .queue-item img {
+            width: 60px;
+            height: 45px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .error {
+            background: rgba(255,0,0,0.2);
+            border: 1px solid rgba(255,0,0,0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.7;
+        }
+
+        .room-controls {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .room-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .song-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .song-thumbnail {
+                width: 120px;
+                height: 90px;
+            }
+
+            .song-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Simple YouTube Music Player</h1>
+            <p>Search and play music from YouTube instantly</p>
+        </div>
+
+        <div class="room-controls">
+            <input type="text" class="room-input" id="roomInput" placeholder="Enter room name (optional)" value="main">
+            <button class="btn btn-play" onclick="joinRoom()">Join Room</button>
+        </div>
+
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search for music..." onkeypress="handleEnter(event)">
+            <button class="search-btn" onclick="searchMusic()">🔍 Search</button>
+        </div>
+
+        <div id="currentPlayer" class="current-player" style="display: none;">
+            <h3>🎵 Now Playing</h3>
+            <div class="current-song">
+                <img id="currentThumbnail" src="" alt="Thumbnail">
+                <div class="current-song-info">
+                    <div class="current-song-title" id="currentTitle"></div>
+                    <div class="current-song-uploader" id="currentUploader"></div>
+                </div>
+            </div>
+            <audio id="audioPlayer" class="audio-player" controls autoplay>
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            🔍 Searching for music...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="searchResults" class="search-results"></div>
+
+        <div class="queue-section">
+            <h3>📋 Queue</h3>
+            <div id="queueList">
+                <div class="empty-state">Queue is empty</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentRoom = 'main';
+        let queue = [];
+
+        // Join room on page load
+        window.onload = function() {
+            joinRoom();
+        };
+
+        function joinRoom() {
+            const roomInput = document.getElementById('roomInput');
+            currentRoom = roomInput.value.trim() || 'main';
+            socket.emit('join_room', { room: currentRoom });
+            console.log(`Joined room: ${currentRoom}`);
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                searchMusic();
+            }
+        }
+
+        async function searchMusic() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            showLoading(true);
+            hideError();
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=20`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displaySearchResults(data.results);
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displaySearchResults(results) {
+            const container = document.getElementById('searchResults');
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div class="empty-state">No results found</div>';
+                return;
+            }
+
+            container.innerHTML = results.map(song => `
+                <div class="song-item">
+                    <div style="position: relative;">
+                        <img class="song-thumbnail" src="${song.cover_art || song.thumbnail}" alt="Cover Art" 
+                             onerror="this.src='${song.thumbnail}'; this.onerror=function(){this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiB2aWV3Qm94PSIwIDAgMTIwIDkwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiBmaWxsPSIjNDQ0Ii8+CjxwYXRoIGQ9Ik00NSAzNUw3MCA1MEw0NSA2NVYzNVoiIGZpbGw9IiNGRkYiLz4KPHN2Zz4K'};">
+                        <div style="position: absolute; bottom: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">
+                            ${song.duration_string}
+                        </div>
+                        ${song.spotify ? '<div style="position: absolute; top: 2px; right: 2px; background: #1DB954; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">🎵</div>' : ''}
+                    </div>
+                    <div class="song-info">
+                        <div class="song-title">${escapeHtml(song.clean_title || song.title)}</div>
+                        <div class="song-meta">
+                            <span>👤 ${escapeHtml(song.clean_artist || song.uploader)}</span>
+                            ${song.album_name ? `<span>� ${escapeHtml(song.album_name)}</span>` : ''}
+                            <span>�👁️ ${formatNumber(song.view_count)}</span>
+                            ${song.spotify_url ? `<a href="${song.spotify_url}" target="_blank" style="color: #1DB954; text-decoration: none;">🎵 Spotify</a>` : ''}
+                        </div>
+                    </div>
+                    <div class="song-actions">
+                        <button class="btn btn-play" onclick="playSong('${song.id}', '${escapeHtml(song.clean_title || song.title)}', '${escapeHtml(song.clean_artist || song.uploader)}', '${song.cover_art || song.thumbnail}', ${JSON.stringify(song.spotify || {}).replace(/"/g, '&quot;')})">
+                            ▶️ Play
+                        </button>
+                        <button class="btn btn-queue" onclick="addToQueue('${song.id}', '${escapeHtml(song.clean_title || song.title)}', '${escapeHtml(song.clean_artist || song.uploader)}', '${song.cover_art || song.thumbnail}', ${JSON.stringify(song.spotify || {}).replace(/"/g, '&quot;')})">
+                            ➕ Queue
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playSong(id, title, uploader, thumbnail) {
+            const song = { id, title, uploader, thumbnail };
+            
+            // Update UI immediately
+            updateCurrentPlayer(song);
+            
+            // Emit to room
+            socket.emit('play_song', { room: currentRoom, song });
+            
+            console.log(`Playing: ${title}`);
+        }
+
+        function addToQueue(id, title, uploader, thumbnail) {
+            const song = { id, title, uploader, thumbnail };
+            queue.push(song);
+            updateQueueDisplay();
+            
+            // Emit to room
+            socket.emit('add_to_queue', { room: currentRoom, song });
+            
+            console.log(`Added to queue: ${title}`);
+        }
+
+        function updateCurrentPlayer(song) {
+            const player = document.getElementById('currentPlayer');
+            const thumbnail = document.getElementById('currentThumbnail');
+            const title = document.getElementById('currentTitle');
+            const uploader = document.getElementById('currentUploader');
+            const audio = document.getElementById('audioPlayer');
+
+            thumbnail.src = song.thumbnail;
+            thumbnail.alt = `${song.title} thumbnail`;
+            title.textContent = song.title;
+            uploader.textContent = song.uploader;
+            audio.src = `/api/stream/${song.id}`;
+            
+            player.style.display = 'block';
+        }
+
+        function updateQueueDisplay() {
+            const container = document.getElementById('queueList');
+            
+            if (queue.length === 0) {
+                container.innerHTML = '<div class="empty-state">Queue is empty</div>';
+                return;
+            }
+
+            container.innerHTML = queue.map((song, index) => `
+                <div class="queue-item">
+                    <img src="${song.thumbnail}" alt="Thumbnail" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA2MCA0NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjQ1IiBmaWxsPSIjNDQ0Ii8+CjxwYXRoIGQ9Ik0yMiAxN0wzNSAyNUwyMiAzM1YxN1oiIGZpbGw9IiNGRkYiLz4KPHN2Zz4K';">
+                    <div class="song-info">
+                        <div style="font-weight: bold;">${escapeHtml(song.title)}</div>
+                        <div style="opacity: 0.8; font-size: 12px;">${escapeHtml(song.uploader)}</div>
+                    </div>
+                    <button class="btn btn-play" onclick="playFromQueue(${index})" style="margin-left: auto;">
+                        ▶️ Play
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function playFromQueue(index) {
+            const song = queue[index];
+            playSong(song.id, song.title, song.uploader, song.thumbnail);
+            queue.splice(index, 1);
+            updateQueueDisplay();
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        // Socket.IO event handlers
+        socket.on('room_state', (data) => {
+            if (data.currentSong) {
+                updateCurrentPlayer(data.currentSong);
+            }
+            queue = data.queue || [];
+            updateQueueDisplay();
+        });
+
+        socket.on('song_changed', (data) => {
+            updateCurrentPlayer(data.song);
+        });
+
+        socket.on('queue_updated', (data) => {
+            queue = data.queue || [];
+            updateQueueDisplay();
+        });
+
+        // Auto-play next song when current song ends
+        document.getElementById('audioPlayer').addEventListener('ended', () => {
+            if (queue.length > 0) {
+                playFromQueue(0);
+            }
+        });
+    </script>
+</body>
+</html>
