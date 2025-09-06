@@ -42,10 +42,64 @@ const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '';
 let spotifyAccessToken = null;
 let spotifyTokenExpiry = null;
 
-// Helper function to run yt-dlp commands
-function runYtDlp(args) {
+// User agents to rotate for better success rate
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
+];
+
+// Cookie management for YouTube
+const COOKIES_FILE = path.join(__dirname, 'youtube_cookies.txt');
+
+// Function to check if cookies file exists
+function hasCookiesFile() {
+  return fs.existsSync(COOKIES_FILE);
+}
+
+// Helper function to run yt-dlp commands with improved anti-bot measures
+function runYtDlp(args, retries = 3) {
   return new Promise((resolve, reject) => {
-    const ytdlp = spawn('yt-dlp', args);
+    const userAgent = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+    
+    // Enhanced arguments for better YouTube compatibility, especially for servers
+    const enhancedArgs = [
+      '--user-agent', userAgent,
+      '--add-header', 'Accept-Language:en-US,en;q=0.9',
+      '--add-header', 'Accept-Encoding:gzip, deflate, br',
+      '--add-header', 'Cache-Control:no-cache',
+      '--add-header', 'Pragma:no-cache',
+      '--add-header', 'Sec-Fetch-Dest:document',
+      '--add-header', 'Sec-Fetch-Mode:navigate',
+      '--add-header', 'Sec-Fetch-Site:none',
+      '--add-header', 'Upgrade-Insecure-Requests:1',
+      '--sleep-interval', '1',
+      '--max-sleep-interval', '5',
+      '--socket-timeout', '30',
+      '--no-warnings',
+      '--no-check-certificate',
+      '--prefer-insecure',
+      '--extractor-retries', '3',
+      '--fragment-retries', '3',
+      '--retry-sleep', 'linear=2',
+    ];
+
+    // Add cookies if available
+    if (hasCookiesFile()) {
+      enhancedArgs.push('--cookies', COOKIES_FILE);
+      console.log('🍪 Using cookies file for authentication');
+    }
+
+    // Add proxy support if available
+    if (process.env.HTTP_PROXY) {
+      enhancedArgs.push('--proxy', process.env.HTTP_PROXY);
+      console.log('🔗 Using HTTP proxy');
+    }
+
+    const finalArgs = [...enhancedArgs, ...args];
+
+    const ytdlp = spawn('yt-dlp', finalArgs);
     let output = '';
     let error = '';
 
@@ -61,7 +115,21 @@ function runYtDlp(args) {
       if (code === 0) {
         resolve(output.trim());
       } else {
-        reject(new Error(`yt-dlp failed: ${error}`));
+        // Check if we should retry
+        if (retries > 0 && (error.includes('Precondition check failed') || 
+                           error.includes('HTTP Error 400') || 
+                           error.includes('HTTP Error 403') ||
+                           error.includes('HTTP Error 429') ||
+                           error.includes('not available on this app') ||
+                           error.includes('Sign in to confirm') ||
+                           error.includes('blocked'))) {
+          console.log(`Retrying yt-dlp command... (${retries} retries left)`);
+          setTimeout(() => {
+            runYtDlp(args, retries - 1).then(resolve).catch(reject);
+          }, Math.random() * 3000 + 2000 * (4 - retries)); // Random + exponential backoff
+        } else {
+          reject(new Error(`yt-dlp failed: ${error}`));
+        }
       }
     });
   });
@@ -196,7 +264,8 @@ app.get('/api/search', async (req, res) => {
     const args = [
       '--dump-json',
       '--flat-playlist',
-      '--no-warnings',
+      '--extractor-args', 'youtube:player_client=android',
+      '--extractor-args', 'youtube:player_skip=webpage',
       `ytsearch${limit}:${query}`
     ];
 
@@ -266,7 +335,7 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
-// API: Get stream URL for a video
+// API: Get stream URL for a video with enhanced compatibility
 app.get('/api/stream/:videoId', async (req, res) => {
   const videoId = req.params.videoId;
 
@@ -285,16 +354,40 @@ app.get('/api/stream/:videoId', async (req, res) => {
   try {
     console.log(`🎵 Getting stream URL for: ${videoId}`);
     
-    const args = [
-      '--get-url',
-      '--format', 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio',
-      '--no-warnings',
-      `https://youtube.com/watch?v=${videoId}`
+    // Try multiple format strategies for better compatibility
+    const formatStrategies = [
+      'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio[ext=mp4]/bestaudio',
+      'bestaudio[acodec=aac]/bestaudio[acodec=mp4a]/bestaudio',
+      'bestaudio/best[height<=480]',
+      'best[height<=360]/worst'
     ];
 
-    const streamUrl = await runYtDlp(args);
+    let streamUrl = null;
+    let lastError = null;
+
+    for (const format of formatStrategies) {
+      try {
+        const args = [
+          '--get-url',
+          '--format', format,
+          '--extractor-args', 'youtube:player_client=android',
+          '--extractor-args', 'youtube:player_skip=webpage',
+          `https://youtube.com/watch?v=${videoId}`
+        ];
+
+        streamUrl = await runYtDlp(args);
+        if (streamUrl && streamUrl.startsWith('http')) {
+          console.log(`✅ Stream URL obtained using format: ${format}`);
+          break;
+        }
+      } catch (error) {
+        lastError = error;
+        console.log(`❌ Failed with format ${format}, trying next...`);
+        continue;
+      }
+    }
     
-    if (streamUrl) {
+    if (streamUrl && streamUrl.startsWith('http')) {
       // Cache the stream URL
       streamCache.set(videoId, {
         url: streamUrl,
@@ -304,12 +397,21 @@ app.get('/api/stream/:videoId', async (req, res) => {
       console.log(`✅ Stream URL obtained for: ${videoId}`);
       res.redirect(streamUrl);
     } else {
-      res.status(404).json({ error: 'Stream URL not found' });
+      console.error('All format strategies failed for:', videoId);
+      res.status(404).json({ 
+        error: 'Stream URL not found', 
+        details: 'All extraction methods failed. YouTube may have restricted this video.',
+        videoId: videoId
+      });
     }
 
   } catch (error) {
     console.error('Stream error:', error);
-    res.status(500).json({ error: 'Failed to get stream URL', details: error.message });
+    res.status(500).json({ 
+      error: 'Failed to get stream URL', 
+      details: error.message,
+      suggestion: 'Try updating yt-dlp: pip install -U yt-dlp'
+    });
   }
 });
 
@@ -322,7 +424,8 @@ app.get('/api/info/:videoId', async (req, res) => {
     
     const args = [
       '--dump-json',
-      '--no-warnings',
+      '--extractor-args', 'youtube:player_client=android',
+      '--extractor-args', 'youtube:player_skip=webpage',
       `https://youtube.com/watch?v=${videoId}`
     ];
 
@@ -448,7 +551,123 @@ app.get("/ping", (req, res) => {
 });
 
 
-// Check if yt-dlp is installed
+// Function to update yt-dlp
+function updateYtDlp() {
+  return new Promise((resolve, reject) => {
+    const updateProcess = spawn('yt-dlp', ['-U']);
+    let output = '';
+    let error = '';
+
+    updateProcess.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    updateProcess.stderr.on('data', (data) => {
+      error += data.toString();
+    });
+
+    updateProcess.on('close', (code) => {
+      if (code === 0) {
+        resolve(output);
+      } else {
+        reject(new Error(error));
+      }
+    });
+  });
+}
+
+// API endpoint to update yt-dlp
+app.post('/api/update-ytdlp', async (req, res) => {
+  try {
+    console.log('🔄 Updating yt-dlp...');
+    const result = await updateYtDlp();
+    console.log('✅ yt-dlp updated successfully');
+    res.json({ 
+      success: true, 
+      message: 'yt-dlp updated successfully',
+      output: result
+    });
+  } catch (error) {
+    console.error('❌ Failed to update yt-dlp:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to update yt-dlp', 
+      details: error.message 
+    });
+  }
+});
+
+// API endpoint to upload cookies
+app.post('/api/upload-cookies', express.text(), (req, res) => {
+  try {
+    const cookiesContent = req.body;
+    
+    if (!cookiesContent || cookiesContent.trim().length === 0) {
+      return res.status(400).json({ error: 'No cookies content provided' });
+    }
+
+    fs.writeFileSync(COOKIES_FILE, cookiesContent);
+    console.log('🍪 Cookies file updated');
+    
+    res.json({ 
+      success: true, 
+      message: 'Cookies uploaded successfully',
+      file: COOKIES_FILE
+    });
+  } catch (error) {
+    console.error('❌ Failed to save cookies:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to save cookies', 
+      details: error.message 
+    });
+  }
+});
+
+// API endpoint to check cookies status
+app.get('/api/cookies-status', (req, res) => {
+  const hasFile = hasCookiesFile();
+  let stats = null;
+  
+  if (hasFile) {
+    try {
+      stats = fs.statSync(COOKIES_FILE);
+    } catch (e) {
+      // File exists but can't read stats
+    }
+  }
+  
+  res.json({
+    hasCookies: hasFile,
+    cookiesFile: COOKIES_FILE,
+    lastModified: stats ? stats.mtime : null,
+    size: stats ? stats.size : null
+  });
+});
+
+// API endpoint to delete cookies
+app.delete('/api/cookies', (req, res) => {
+  try {
+    if (hasCookiesFile()) {
+      fs.unlinkSync(COOKIES_FILE);
+      console.log('🗑️ Cookies file deleted');
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Cookies deleted successfully'
+    });
+  } catch (error) {
+    console.error('❌ Failed to delete cookies:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to delete cookies', 
+      details: error.message 
+    });
+  }
+});
+
+// Check if yt-dlp is installed and its version
 exec('yt-dlp --version', (error, stdout, stderr) => {
   if (error) {
     console.error('❌ yt-dlp not found! Please install it:');
@@ -456,6 +675,12 @@ exec('yt-dlp --version', (error, stdout, stderr) => {
     console.error('   or download from: https://github.com/yt-dlp/yt-dlp');
   } else {
     console.log(`✅ yt-dlp version: ${stdout.trim()}`);
+    
+    // Auto-update if version is old (optional)
+    const version = stdout.trim();
+    if (version.includes('2023.') || version.includes('2024.01') || version.includes('2024.02')) {
+      console.log('⚠️ Your yt-dlp version might be outdated. Consider updating with: yt-dlp -U');
+    }
   }
 });
 
